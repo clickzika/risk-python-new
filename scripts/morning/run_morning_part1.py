@@ -87,13 +87,6 @@ web3 = 'https://www.ibond.thaibma.or.th/cp-index'
 web4 = 'https://www.ibond.thaibma.or.th/mtm-corp-index'
 web5 = 'https://www.ibond.thaibma.or.th/esg-index'
 
-dl_path = os.path.join(os.path.expanduser('~'), 'Downloads')
-_from = 'YieldTTM_202'
-des_path = os.path.join(os.path.expanduser('~'), 'Desktop', 'Daily_for_Daily')
-_to = 'D_YieldTTM'
-
-
-
 driver.get(web_login)
 
 time.sleep(4)
