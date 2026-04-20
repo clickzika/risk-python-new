@@ -67,26 +67,6 @@ def open_file_and_run_macro(file_path_Bench: str, name2: str):
     excel_app.Quit()
     del excel_app
 
-# เรียกใช้งานฟังก์ชัน
-#open_file_and_run_macro(file_path_Bench, name2)
-
-# def open_file_and_run_macro(file_path_Bench: str, name2: str):
-#         """
-#         :param file_path: path to file, including file name
-#         :param name: file name, with .xlsm extension
-#         """
-#         xl = win32com.client.Dispatch('Excel.Application')
-#         xl.Visible = True
-#         wb = xl.Workbooks.Open(os.path.abspath(file_path_Bench))
-#         xl.Application.Run(f'{name2}!Module1.{macro_name_Bench}')
-#         while not xl.Application.Ready:
-#             time.sleep(1)  # รอ 1 วินาทีแล้วเช็คใหม่
-#         #wb.Close(SaveChanges=True)
-#         xl.Quit()
-#         del xl
-# open_file_and_run_macro(file_path_Bench, name2)
-
-
 #########**********************
 
 yesterday= (datetime.now() - timedelta(days=0)).strftime('%d/%m/%Y')
@@ -200,7 +180,7 @@ def doallTBMA():
     LoadFile(driver, web3, xpath3, xpathdate3, 'BBBplus', yesterday)
     time.sleep(3)
     driver.quit()
-    subprocess.call("TASKKILL /f  /IM  CHROMEDRIVER.EXE")
+    subprocess.call("TASKKILL /f /IM msedgedriver.exe")
     time.sleep(4)
 
 
@@ -241,34 +221,10 @@ def run_excel_macro(file_path, macro_name):
         excel_app.Run(macro_name)
         workbook.Close(SaveChanges=False)
         excel_app.Quit()
-        
         print("Macro executed successfully.")
-        import time
-        while not excel.Application.Ready:
-            time.sleep(1)  
 
     except Exception as e:
         print("An error occurred:", e)
-
-#      """
-# def run_excel_macro2(file_path2, macro_name2):
-#     try:
-#         excel_app = win32com.client.Dispatch("Excel.Application")
-#         excel_app.Visible = False
-#         workbook = excel_app.Workbooks.Open(file_path)
-#         excel_app.Run(macro_name)
-#         workbook.Close(SaveChanges=True)
-#         excel_app.Quit()
-        
-#         print("Macro executed successfully.")
-
-#     except Exception as e:
-#          print("An error occurred:", e)
-
-# file_path2 = r'C:\Users\Amornsiris\Desktop\Daily_for_Daily\afternoon\Benchmark.xlsm'
-# macro_name2 = 'Evening'
-
-#     """
 
 def partonetransfer():
     time.sleep(3)
@@ -287,15 +243,13 @@ def read_df():
     while True:
         df = pd.read_excel(fileGPO, sheet_name='Benchmark - PI')
         if df.iloc[-1, 0].strftime('%d/%m/%Y') == today and pd.notna(df.iloc[-1, [2, 4, 5]]).all().all() == True:
-            #run_excel_macro2(file_path2, macro_name2)
             print('complete part one')
-            break  # ออกจาก loop เมื่อเงื่อนไขสำเร็จ
+            break
         else:
             doallTBMA()
             partonetransfer()
-            #run_excel_macro2(file_path2, macro_name2)
 read_df()
-subprocess.call("TASKKILL /f  /IM  CHROMEDRIVER.EXE")
+subprocess.call("TASKKILL /f /IM msedgedriver.exe")
 
 #-----------------------------------------------------------------------------------------------------------
 today_dash = datetime.now().strftime('%Y-%m-%d')

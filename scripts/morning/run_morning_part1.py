@@ -5,10 +5,11 @@ from selenium.webdriver.edge.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.edge.options import Options
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from webdriver_manager.microsoft import EdgeChromiumDriverManager
 from dotenv import load_dotenv
 from risk_logger import get_logger
-
+import win32com.client
 import os
 import shutil
 import glob
@@ -56,7 +57,7 @@ except Exception as e:
 def wait_for_download(download_path, timeout=10):
     start_time = time.time()  
     
-    while any([filename.endswith(".crdownload") for filename in os.listdir(download_path)]):
+    while any([filename.endswith(".tmp") for filename in os.listdir(download_path)]):
         # ตรวจสอบว่าเวลาที่ผ่านไป เกิน timeout ที่ตั้งไว้หรือยัง
         if time.time() - start_time > timeout:
             print("หมดเวลารอ (10 วินาที) จะเริ่มทำงานขั้นตอนถัดไป...")
@@ -86,9 +87,9 @@ web3 = 'https://www.ibond.thaibma.or.th/cp-index'
 web4 = 'https://www.ibond.thaibma.or.th/mtm-corp-index'
 web5 = 'https://www.ibond.thaibma.or.th/esg-index'
 
-dl_path = 'C:\\Users\\Amornsiris\\Downloads'
+dl_path = os.path.join(os.path.expanduser('~'), 'Downloads')
 _from = 'YieldTTM_202'
-des_path = r"C:\Users\Amornsiris\Desktop\Daily_for_Daily"
+des_path = os.path.join(os.path.expanduser('~'), 'Desktop', 'Daily_for_Daily')
 _to = 'D_YieldTTM'
 
 
@@ -154,11 +155,8 @@ except:
     print('ไม่มีปุ่ม Accept หรือกดไม่สำเร็จ')
 
 
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
-
 def LoadFile(xpath, file_number):
     try:
-        # รอไม่เกิน 3 วินาที
         element = WebDriverWait(driver, 7).until(
             EC.element_to_be_clickable((By.XPATH, xpath))
         )
@@ -166,20 +164,11 @@ def LoadFile(xpath, file_number):
         time.sleep(1)
         driver.execute_script("arguments[0].click();", element)
         time.sleep(3)
-        print(f'ไฟล์ {file_number} สำเร็จ')
+        log.info(f"Downloaded file {file_number}")
     except (TimeoutException, NoSuchElementException):
-        print(f'ไฟล์ {file_number} ข้าม (ไม่เจอ element)')
+        log.warning(f"File {file_number} skipped — element not found")
     except Exception as e:
-        print(f'ไฟล์ {file_number} ไม่สำเร็จ: {e}')
-        
-    try:
-        driver.find_element(By.XPATH,xpath).click()
-        time.sleep(4)
-        print(f'ไฟล์ {file_number} สำเร็จ')
-    except (TimeoutException, NoSuchElementException):
-        print(f'ไฟล์ {file_number} ข้าม (ไม่เจอ element)')
-    except Exception as e:
-        print(f'ไฟล์ {file_number} ไม่สำเร็จ: {e}')
+        log.error(f"File {file_number} failed: {e}")
 
 LoadFile("//table//tr[1]/td[14]//button//i", "แรก")
 
@@ -197,47 +186,15 @@ time.sleep(5)
 
 
 driver.get(web3)
-
-def LoadA():
-    for i in range(360):
-        try:
-            driver.find_element(By.XPATH,"//table///tr[2]/td[13]//button//i").click()
-            break
-        except:
-            time.sleep(0.5)
-    print('ไฟล์Aสำเร็จ')
-    
-LoadFile("//table//tr[2]/td[13]//button//i", "สี่")  
+LoadFile("//table//tr[2]/td[13]//button//i", "สี่")
 time.sleep(7)
 
-
 driver.get(web4)
-
-def LoadCorBond():
-    for i in range(360):
-        try:
-            driver.find_element(By.XPATH,'//table//tr[2]/td[14]//button//i').click()
-            break
-        except:
-            time.sleep(0.5)
-    print('ไฟล์CorBondสำเร็จ')
-
-LoadFile('//table//tr[2]/td[14]//button//i',"ห้า")
-
+LoadFile('//table//tr[2]/td[14]//button//i', "ห้า")
 time.sleep(10)
 
 driver.get(web5)
-
-def LoadESGGovBond():
-    for i in range(360):
-        try:
-            driver.find_element(By.XPATH,'//table//tr[6]/td[14]//button//i').click()
-            break
-        except:
-            time.sleep(0.5)
-    print('ไฟล์ESGGovBondสำเร็จ')
-
-LoadFile('//table//tr[6]/td[14]//button//i',"หก")
+LoadFile('//table//tr[6]/td[14]//button//i', "หก")
 
 time.sleep(10)
 
@@ -313,8 +270,6 @@ D_YieldTTM(_from, _to)
 
 
 time.sleep(2)
-
-import win32com.client
 
 def run_excel_macro(file_path, macro_name):
     try:
