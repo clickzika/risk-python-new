@@ -1,11 +1,11 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.edge.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.edge.options import Options
+from webdriver_manager.microsoft import EdgeChromiumDriverManager
 from dotenv import load_dotenv
 from risk_logger import get_logger
 
@@ -69,15 +69,15 @@ def wait_for_download(download_path, timeout=10):
 #3 + 7
 
 
-chrome_options = Options()
-chrome_options.add_argument("--start-maximized")
-chrome_options.add_experimental_option("prefs", {
+edge_options = Options()
+edge_options.add_argument("--start-maximized")
+edge_options.add_experimental_option("prefs", {
     'download.default_directory': download_dir,
     'profile.default_content_setting_values.automatic_downloads': 1
 })
 
 
-driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+driver = webdriver.Edge(service=Service(EdgeChromiumDriverManager().install()), options=edge_options)
 
 web_login = 'https://www.ibond.thaibma.or.th/login?page=/bondsearch/bondsearchpage'
 web = 'https://www.ibond.thaibma.or.th/yield-curve/government'

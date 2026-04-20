@@ -1,10 +1,10 @@
 from dotenv import load_dotenv
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.edge.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.microsoft import EdgeChromiumDriverManager
 from selenium.common.exceptions import NoSuchElementException
 from risk_logger import get_logger
 import time
@@ -133,7 +133,7 @@ password = os.getenv('pass')
 username = os.getenv('user')
 
 download_dir = r'\\w2fsspho101.lhfund.net\FM-RI$\risk\Amornsiri\Logfile_forevening\From_load'
-options = webdriver.ChromeOptions()
+options = webdriver.EdgeOptions()
 prefs = {
     'download.default_directory': download_dir,
     'plugins.always_open_pdf_externally': True,
@@ -142,8 +142,8 @@ prefs = {
 options.add_argument("--start-maximized")
 options.add_experimental_option('prefs', prefs)
 
-service = Service(ChromeDriverManager().install())
-driver = webdriver.Chrome(options=options, service=service)
+service = Service(EdgeChromiumDriverManager().install())
+driver = webdriver.Edge(options=options, service=service)
 
     
 def LoadFile(driver, web, xpath, xpathdate, file_number, yesterday):
@@ -182,7 +182,7 @@ def LoadFile(driver, web, xpath, xpathdate, file_number, yesterday):
 
 
 def doallTBMA():
-    driver = webdriver.Chrome(options=options, service=service)
+    driver = webdriver.Edge(options=options, service=service)
 
     # ล็อกอินแค่ครั้งเดียว
     driver.get(web)
