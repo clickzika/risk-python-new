@@ -59,9 +59,15 @@ risk-python/
 │   └── run_evening.bat             # Run evening workflow (GPO)
 ├── risk_logger.py                  # Shared logging module (must stay at root)
 ├── requirements.txt                # Pinned Python dependencies
-├── .env.example                    # Credential template (copy to PP.env and fill in)
-├── PP.env                          # ⚠️ CREDENTIALS — ThaiBMA username/password (gitignored)
-├── two.env                         # ⚠️ CREDENTIALS — additional credentials (gitignored)
+├── scripts/
+│   ├── .env                        # ⚠️ CREDENTIALS — ThaiBMA username/password (gitignored)
+│   ├── .env.example                # Credential template (copy to .env and fill in)
+│   ├── morning/
+│   │   ├── run_morning_part1.py
+│   │   └── run_morning_part2.py
+│   └── evening/
+│       ├── run_evening.py
+│       └── send_gpo_email.py
 ├── power_automate_for_Afternoon.xlsm  # Excel macro file (afternoon workflow, gitignored)
 ├── NAV_Complete.xlsm               # Excel NAV workbook (gitignored)
 ├── logfile_formorning/             # Downloaded morning data files (ThaiBMA, Bloomberg)
@@ -117,12 +123,11 @@ Credentials are loaded from `.env` files (never committed to git):
 
 | File | Contents | Loaded By |
 |------|----------|-----------|
-| `PP.env` | ThaiBMA `user` + `pass` | `Run_morning_ThaiBMA.py` |
-| `two.env` | Additional credentials | Other scripts |
+| `scripts/.env` | ThaiBMA `user` + `pass` | All scripts (auto-resolved via `__file__`) |
 
-Both files are loaded from `~/Desktop/PP.env` path via `python-dotenv`.
+Default path is `scripts/.env` relative to project root. Override with `RISK_ENV_PATH` env var.
 
-**⚠️ CRITICAL: Never commit `.env` files. Always check `.gitignore` before pushing.**
+**⚠️ CRITICAL: Never commit `scripts/.env`. It is gitignored. Copy `scripts/.env.example` to set up.**
 
 ---
 
@@ -141,7 +146,6 @@ Both files are loaded from `~/Desktop/PP.env` path via `python-dotenv`.
 1. **No error handling / retry logic** in some scripts (Selenium loops exist but swallow exceptions)
 2. **Hardcoded network paths** — breaks if run on a machine without mapped drives
 3. **No tests** — zero test coverage
-4. **Credentials in PP.env on Desktop** — non-standard path; use `RISK_ENV_PATH` env var override to fix
 
 ---
 

@@ -19,8 +19,8 @@ from datetime import date, timedelta
 log = get_logger("Run_morning_ThaiBMA")
 log.info("=== Morning ThaiBMA Part 1 started ===")
 
-# A2: allow override via RISK_ENV_PATH env var; fall back to Desktop path for backwards compat
-env_path = os.environ.get('RISK_ENV_PATH') or os.path.join(os.path.expanduser('~'), 'Desktop', 'PP.env')
+_proj_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+env_path = os.environ.get('RISK_ENV_PATH') or os.path.join(_proj_root, 'scripts', '.env')
 load_dotenv(env_path)
 log.info(f"Loaded credentials from: {env_path}")
 password = os.getenv('pass')
