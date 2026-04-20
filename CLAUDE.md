@@ -26,38 +26,44 @@ querying SQL Server for NAV/Holdings/VaR data, and sending automated email repor
 
 ```
 risk-python/
-├── Run_morning_ThaiBMA.py          # Morning: Selenium scrape ThaiBMA bond indexes (Part 1)
-├── Run_morning_ThaiBMA_part_2.py   # Morning: ThaiBMA scrape Part 2 (ZRR, Corp Bond, etc.)
-├── GPO.py                          # Evening: run Excel VBA macros + send Benchmark email
-├── GPO_only_send_email.py          # Standalone: send GPO performance email via Outlook
+├── scripts/
+│   ├── morning/
+│   │   ├── run_morning_part1.py    # Selenium scrape ThaiBMA bond indexes (Part 1)
+│   │   └── run_morning_part2.py    # ThaiBMA scrape Part 2 (ZRR, Corp Bond, etc.)
+│   └── evening/
+│       ├── run_evening.py          # Run Excel VBA macros + send Benchmark email (GPO)
+│       └── send_gpo_email.py       # Standalone: send GPO performance email via Outlook
+├── sql/
+│   ├── bloomberg/
+│   │   ├── bloomberg.sql           # Bloomberg MTM FX/EQ pivot query
+│   │   ├── bloomberg_raw.sql       # Bloomberg raw data query
+│   │   └── bloomberg_raw_old.sql
+│   ├── holdings/
+│   │   ├── holding_daily.sql       # Daily portfolio holdings query
+│   │   ├── holding_daily_2.sql
+│   │   ├── holding_daily_3.sql
+│   │   ├── tier.sql
+│   │   └── call_stock_price_create_bench.sql
+│   ├── nav/
+│   │   ├── mf_nav.sql              # Mutual Fund NAV
+│   │   ├── mf_totalnav.sql
+│   │   ├── pf_nav.sql              # Private Fund NAV
+│   │   ├── pf_totalnav.sql
+│   │   ├── pvd_nav.sql             # Provident Fund NAV
+│   │   └── pvd_totalnav.sql
+│   └── var/
+│       ├── final_var.sql           # VaR (Value at Risk) parametric calculation
+│       └── var_test.sql
+├── runners/
+│   ├── run_morning.bat             # Run full morning workflow (Part 1 → Part 2)
+│   └── run_evening.bat             # Run evening workflow (GPO)
+├── risk_logger.py                  # Shared logging module (must stay at root)
+├── requirements.txt                # Pinned Python dependencies
+├── .env.example                    # Credential template (copy to PP.env and fill in)
 ├── PP.env                          # ⚠️ CREDENTIALS — ThaiBMA username/password (gitignored)
 ├── two.env                         # ⚠️ CREDENTIALS — additional credentials (gitignored)
-├── power_automate_for_Afternoon.xlsm  # Excel macro file (afternoon workflow)
-├── NAV_Complete.xlsm               # Excel NAV workbook
-├── SQL/
-│   └── SQL Code/
-│       ├── Bloomberg.sql           # Bloomberg MTM FX/EQ pivot query
-│       ├── Bloomberg_raw.sql       # Bloomberg raw data query
-│       ├── Final_VaR.sql           # VaR (Value at Risk) parametric calculation
-│       ├── Holding_Daily.sql       # Daily portfolio holdings query
-│       ├── Holding_Daily_2.sql
-│       ├── Holding_Daily_3.sql
-│       ├── Call_stock_price_create_bench.sql
-│       ├── Tier.sql
-│       └── Call NAV/
-│           ├── MF_NAV.sql          # Mutual Fund NAV
-│           ├── MF_TotalNAV.sql
-│           ├── PF_NAV.sql          # Private Fund NAV
-│           ├── PF_TotalNAV.sql
-│           ├── PVD_NAV.sql         # Provident Fund NAV
-│           └── PVD_TotalNAV.sql
-├── file dib/
-│   ├── run_evening.py              # Evening workflow (alternative/dev version)
-│   ├── run_evening.bat             # BAT runner for evening via Anaconda
-│   ├── Run_Morning - Copy.bat      # BAT runner for morning via Anaconda
-│   ├── Combine_all_code.ipynb      # Combined workflow notebook (dev)
-│   ├── Part2_complete.ipynb        # Part 2 notebook
-│   └── True_After_part1.ipynb     # Post-part1 notebook
+├── power_automate_for_Afternoon.xlsm  # Excel macro file (afternoon workflow, gitignored)
+├── NAV_Complete.xlsm               # Excel NAV workbook (gitignored)
 ├── logfile_formorning/             # Downloaded morning data files (ThaiBMA, Bloomberg)
 ├── Logfile_forevening/             # Downloaded evening data files
 ├── docs/                           # Project documentation (HTML)
@@ -70,21 +76,25 @@ risk-python/
 
 ### Morning Workflow (Run daily before market open)
 
-1. **`Run_morning_ThaiBMA.py`** — Logs into ThaiBMA website via Selenium, downloads:
+1. **`scripts/morning/run_morning_part1.py`** — Logs into ThaiBMA website via Selenium, downloads:
    - Morningstar Benchmark index
    - ZRR index, Short-term index, Bond index, MTM Corp index, Composite index, Corp ZRR index
    - Copies files to network share `\\w2fsspho101.lhfund.net\FM-RI$\risk\`
-2. **`Run_morning_ThaiBMA_part_2.py`** — Downloads remaining ThaiBMA indexes
+2. **`scripts/morning/run_morning_part2.py`** — Downloads remaining ThaiBMA indexes
+
+Use `runners/run_morning.bat` to run both parts in sequence.
 
 ### Evening Workflow (Run after market close)
 
-1. **`GPO.py`** — Runs Excel VBA macro `Create_Afternoon` on `power_automate_for_Afternoon.xlsm`
+1. **`scripts/evening/run_evening.py`** — Runs Excel VBA macro `Create_Afternoon` on `power_automate_for_Afternoon.xlsm`
    - Runs `evening` macro on `Benchmark.xlsm`
    - Sends GPO update email via Outlook to `risk@lhfund.co.th; operation@lhfund.co.th`
 
+Use `runners/run_evening.bat` to run.
+
 ### Standalone Email
 
-- **`GPO_only_send_email.py`** — Reads GPO-FIXED and GPO-EQ Excel files from Bloomberg share,
+- **`scripts/evening/send_gpo_email.py`** — Reads GPO-FIXED and GPO-EQ Excel files from Bloomberg share,
   formats HTML table, sends via Outlook
 
 ---
@@ -128,12 +138,10 @@ Both files are loaded from `~/Desktop/PP.env` path via `python-dotenv`.
 
 ## Known Issues / Tech Debt
 
-1. **No requirements.txt** — dependencies are implicit; new dev must guess what to install
-2. **No error handling / retry logic** in some scripts (Selenium loops exist but swallow exceptions)
-3. **Hardcoded network paths** — breaks if run on a machine without mapped drives
-4. **No tests** — zero test coverage
-5. **Credentials in PP.env on Desktop** — non-standard path; breaks if Desktop path differs
-6. **Duplicate code** — `GPO.py` and `file dib/run_evening.py` have near-identical logic
+1. **No error handling / retry logic** in some scripts (Selenium loops exist but swallow exceptions)
+2. **Hardcoded network paths** — breaks if run on a machine without mapped drives
+3. **No tests** — zero test coverage
+4. **Credentials in PP.env on Desktop** — non-standard path; use `RISK_ENV_PATH` env var override to fix
 
 ---
 
