@@ -13,8 +13,8 @@ Notion Board: https://www.notion.so/348d9f1fcda181688020dff322287c79
 |------|------|-------|--------|
 | A | Foundation | A1, A2, A3 | ✅ DONE |
 | B | Reliability & Error Handling | B1, B2 | ✅ DONE |
-| C | Security | C1, C2 | ⬜ TODO |
-| D | CI & Developer Experience | D1, D2 | ⬜ TODO |
+| C | Security | C1, C2 | ✅ DONE |
+| D | CI & Developer Experience | D1, D2 | ✅ DONE |
 
 ---
 
