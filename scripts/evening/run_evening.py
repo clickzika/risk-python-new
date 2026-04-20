@@ -7,6 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.microsoft import EdgeChromiumDriverManager
 from selenium.common.exceptions import NoSuchElementException
 from risk_logger import get_logger
+import sys
 import time
 import os
 import glob
@@ -18,16 +19,25 @@ import subprocess
 from pathlib import Path
 from datetime import datetime, timedelta
 
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+from config import (
+    EVENING_DL_DIR, EVENING_DATA_DIR,
+    POWER_AUTOMATE_PM, BENCHMARK_XLSM, BENCHMARK_XLSM_NAME,
+    THAIBMA_LOGIN_ST, THAIBMA_LOGIN_BOND, THAIBMA_LOGIN_CORP,
+    GPO_FIXED_FILE, GPO_EQ_FILE, SET_TRI_GLOB,
+    MACRO_FINISH_BMA, MACRO_NEW_FINISH_SET, MACRO_CREATE_PM, MACRO_EVENING_BENCH,
+    EVENING_FILE_MAPPINGS, EMAIL_RECIPIENTS,
+)
+
 log = get_logger("GPO")
 log.info("=== GPO evening workflow started ===")
 
 
-file_path = r'\\w2fsspho101.lhfund.net\FM-RI$\risk\Amornsiri\power_automate_for_Afternoon.xlsm'
-#######*************************
-macro_name = 'Create_Afternoon'
-file_path_Bench = r"\\w2fsspho101.lhfund.net\FM-RI$\risk\1.Risk Report\1.Daily Risk Report\Benchmark.xlsm"
-name2 =  r"Benchmark.xlsm"
-macro_name_Bench = r'evening'
+file_path = POWER_AUTOMATE_PM
+macro_name = MACRO_CREATE_PM
+file_path_Bench = BENCHMARK_XLSM
+name2 = BENCHMARK_XLSM_NAME
+macro_name_Bench = MACRO_EVENING_BENCH
 
 
 def Create_Afternoon(file_path, macro_name):
@@ -82,27 +92,13 @@ xpathdate2 = '//*[@id="root"]/div[3]/div[1]/div[3]/div/div[2]/div/div/div/div[1]
 xpath3 = '//*[@id="root"]/div[3]/div[1]/div[3]/div/div[2]/div/div/div/table/tbody/tr[8]/td[14]/div/button/i'
 xpathdate3 = '//*[@id="root"]/div[3]/div[1]/div[3]/div/div[2]/div/div/div/div[1]/div[1]'
 
-web = 'https://www.ibond.thaibma.or.th/login?page=/shortterm-index'
-web2 = 'https://www.ibond.thaibma.or.th/login?page=/bond-index'
-web3 = 'https://www.ibond.thaibma.or.th/login?page=/mtm-corp-index'
+web = THAIBMA_LOGIN_ST
+web2 = THAIBMA_LOGIN_BOND
+web3 = THAIBMA_LOGIN_CORP
 
-dl_path = r'\\w2fsspho101.lhfund.net\FM-RI$\risk\Amornsiri\Logfile_forevening\From_load'
-_from = 'GOV_Index_G1'
-des_path = r'\\w2fsspho101.lhfund.net\FM-RI$\risk\Amornsiri\Logfile_forevening'
-_to = 'GOV_Index_G1_after'
-
-_from2 = 'MTMCorp_BBBplusup_G1'
-_to2 = 'MTMCorp_BBBplusup_G1'
-
-_from3 = 'STGov_Index'
-_to3 = 'STGov_Index'
-
-
-macro_name = 'finish_BMA'
-
-fileGPO = r'P:\Bloomberg\Management Fee for PVD\Management Fee for PVD_GPO-FIXED - LHFUND_REVISED_RATE.xls'
-fileGPO2 = r'P:\Bloomberg\Management Fee for PVD\Management Fee for PVD_GPO-EQ - LHFUND  REVISED_RATE.xls'
-##########******************************
+macro_name = MACRO_FINISH_BMA
+fileGPO = GPO_FIXED_FILE
+fileGPO2 = GPO_EQ_FILE
 
 
 _proj_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -112,7 +108,7 @@ log.info(f"Loaded credentials from: {env_path}")
 password = os.getenv('pass')
 username = os.getenv('user')
 
-download_dir = r'\\w2fsspho101.lhfund.net\FM-RI$\risk\Amornsiri\Logfile_forevening\From_load'
+download_dir = EVENING_DL_DIR
 options = webdriver.EdgeOptions()
 prefs = {
     'download.default_directory': download_dir,
@@ -193,10 +189,10 @@ doallTBMA()
 def Transfer(_from, _to):
     for i in range(360):
         try:
-            list_of_files = glob.glob(f'{dl_path}\\{_from}*.xlsx')
+            list_of_files = glob.glob(f'{EVENING_DL_DIR}\\{_from}*.xlsx')
             print(f'Attempt {i+1}: Found files: {list_of_files}')
             if not list_of_files:
-                raise FileNotFoundError(f"No files matched pattern: {dl_path}\\{_from}*.xlsx")
+                raise FileNotFoundError(f"No files matched pattern: {EVENING_DL_DIR}\\{_from}*.xlsx")
             latest_file = max(list_of_files, key=os.path.getctime)
             print(f'Latest file: {latest_file}')
             break
@@ -206,7 +202,7 @@ def Transfer(_from, _to):
     else:
         raise FileNotFoundError("No files found after multiple attempts.")
 
-    destination_path = f'{des_path}\\{_to}.xlsx'
+    destination_path = f'{EVENING_DATA_DIR}\\{_to}.xlsx'
     print(f'Copying file to: {destination_path}')
     shutil.copy(latest_file, destination_path)
     print('File copied successfully.')
@@ -228,9 +224,8 @@ def run_excel_macro(file_path, macro_name):
 
 def partonetransfer():
     time.sleep(3)
-    Transfer(_from, _to)
-    Transfer(_from2, _to2)
-    Transfer(_from3, _to3)
+    for _from, _to in EVENING_FILE_MAPPINGS:
+        Transfer(_from, _to)
     time.sleep(5)
     run_excel_macro(file_path, macro_name)
 partonetransfer()
@@ -260,7 +255,7 @@ def new_set():
     yesterday_dash = (datetime.now()- timedelta(1)).strftime('%Y-%m-%d')
     global latest_file
     for i in range(360):    
-        latest_file = max(glob.glob(r"P:\###RISK###\SET TRI\202*\*\*"), key=os.path.getmtime)
+        latest_file = max(glob.glob(SET_TRI_GLOB), key=os.path.getmtime)
         print(latest_file)
         latest_filename = os.path.basename(latest_file)  # เอาเฉพาะชื่อไฟล์
         print(latest_filename)
@@ -285,18 +280,9 @@ def Check_set():
 Check_set()           
 
 
-des_path = r'\\w2fsspho101.lhfund.net\FM-RI$\risk\Amornsiri\Logfile_forevening'
-_toset = 'set'
-destination_path = f'{des_path}\\{_toset}.csv'
+shutil.copy(latest_file, f'{EVENING_DATA_DIR}\\set.csv')
 
-
-shutil.copy(latest_file, destination_path)
-
-
-
-macro_name99 = 'new_finish_set'
-
-run_excel_macro(file_path, macro_name99)
+run_excel_macro(file_path, MACRO_NEW_FINISH_SET)
 
 
 
@@ -317,7 +303,7 @@ ol = win32com.client.Dispatch('Outlook.Application')
 olmailitem = 0x0
 newmail = ol.CreateItem(olmailitem)
 newmail.Subject = 'อัพเดท GPO'
-newmail.To = 'risk@lhfund.co.th ; operation@lhfund.co.th'
+newmail.To = EMAIL_RECIPIENTS
 #newmail.To = 'Panisarap@lhfund.co.th ; kornwipad@lhfund.co.th ; Amornsiris@lhfund.co.th'
 #newmail.To = 'Amornsiris@lhfund.co.th'
 ############*********************************

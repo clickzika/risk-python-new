@@ -1,27 +1,21 @@
+import sys
+import os
 import win32com.client
 import pandas as pd
 
-fileGPO = r'P:\Bloomberg\Management Fee for PVD\Management Fee for PVD_GPO-FIXED - LHFUND_REVISED_RATE.xls'
-fileGPO2 = r'P:\Bloomberg\Management Fee for PVD\Management Fee for PVD_GPO-EQ - LHFUND  REVISED_RATE.xls'
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+from config import GPO_FIXED_FILE, GPO_EQ_FILE, EMAIL_RECIPIENTS
 
-df1 = pd.read_excel(fileGPO,sheet_name = 'Benchmark - PI',header=4 )
-df2 = pd.read_excel(fileGPO2,sheet_name = 'Benchmark - PI',header=4)
+df1 = pd.read_excel(GPO_FIXED_FILE, sheet_name='Benchmark - PI', header=4)
+df2 = pd.read_excel(GPO_EQ_FILE, sheet_name='Benchmark - PI', header=4)
 
-
-table_str1 = df1.iloc[:,[0,1,2,4,5]].tail(1).to_html(header=True, index=False)
+table_str1 = df1.iloc[:, [0, 1, 2, 4, 5]].tail(1).to_html(header=True, index=False)
 table_str2 = df2.iloc[:, [0, 2]].tail(1).to_html(header=True, index=False)
 
-#table_str1 = df1.iloc[:, :7].tail(3).to_html(header=True, index=False)
-#table_str2 = df2.iloc[:, [0, 2, 4]].tail(3).to_html(header=True, index=False)
-
 ol = win32com.client.Dispatch('Outlook.Application')
-olmailitem = 0x0
-newmail = ol.CreateItem(olmailitem)
+newmail = ol.CreateItem(0x0)
 newmail.Subject = 'อัพเดท GPO'
-newmail.To = 'risk@lhfund.co.th ; operation@lhfund.co.th'
-#newmail.To = 'Panisarap@lhfund.co.th ; kornwipad@lhfund.co.th ; Amornsiris@lhfund.co.th'
-#newmail.To = 'Amornsiris@lhfund.co.th'
-############*********************************
+newmail.To = EMAIL_RECIPIENTS
 newmail.HTMLBody = f'''
 <html>
 <head>
@@ -46,10 +40,4 @@ newmail.HTMLBody = f'''
 </body>
 </html>
 '''
-
-# แนบไฟล์ (ถ้ามี)
-# attach = 'C:\\Users\\admin\\Desktop\\Python\\Sample.xlsx'
-# newmail.Attachments.Add(attach)
-
-# ส่งอีเมล
 newmail.Send()

@@ -10,12 +10,22 @@ from webdriver_manager.microsoft import EdgeChromiumDriverManager
 from dotenv import load_dotenv
 from risk_logger import get_logger
 import win32com.client
+import sys
 import os
 import shutil
 import glob
 import time
 import datetime
 from datetime import date, timedelta
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+from config import (
+    MORNINGSTAR_SRC, DATA_FILE_DIR, MORNING_DL_DIR, MORNING_DATA_DIR,
+    LH_REPORT_GLOB, LH_REPORT_DEST, POWER_AUTOMATE,
+    THAIBMA_LOGIN, THAIBMA_YIELD_GOV, THAIBMA_MTM_GOV,
+    THAIBMA_CP, THAIBMA_MTM_CORP, THAIBMA_ESG,
+    MACRO_UPDATE_DATA, MORNING_PART1_FILE_MAPPINGS,
+)
 
 log = get_logger("Run_morning_ThaiBMA")
 log.info("=== Morning ThaiBMA Part 1 started ===")
@@ -27,28 +37,20 @@ log.info(f"Loaded credentials from: {env_path}")
 password = os.getenv('pass')
 username = os.getenv('user')
 
-#1 Check 
+download_dir = MORNING_DL_DIR
 
-dl_path = r'\\172.16.21.100\Risk$\Morningstar Benchmark';
-_from = 'Morningstar Benchmark';
-des_path = r'\\w2fsspho101.lhfund.net\FM-RI$\risk\98.Data File';
-_to = 'Morningstar Benchmark';
-
-download_dir = r'\\w2fsspho101.lhfund.net\FM-RI$\risk\Amornsiri\logfile_formorning\From_load'
-
-def Morningstar_Benchmark(_from, _to):
+def Morningstar_Benchmark():
     for i in range(360):
         try:
-            list_of_files = glob.glob(f'{dl_path}\\{_from}*.xls')
+            list_of_files = glob.glob(f'{MORNINGSTAR_SRC}\\Morningstar Benchmark*.xls')
             latest_file = max(list_of_files, key=os.path.getctime)
             break
         except:
             time.sleep(0.5)
-    destination_path = f'{des_path}\\{_to}.xls'
-    shutil.copy(latest_file, destination_path)
+    shutil.copy(latest_file, f'{DATA_FILE_DIR}\\Morningstar Benchmark.xls')
 
 try:
-    Morningstar_Benchmark(_from, _to)
+    Morningstar_Benchmark()
     log.info("Morningstar Benchmark copied successfully")
 except Exception as e:
     log.error(f"Morningstar Benchmark copy failed: {e}", exc_info=True)
@@ -80,12 +82,12 @@ edge_options.add_experimental_option("prefs", {
 
 driver = webdriver.Edge(service=Service(EdgeChromiumDriverManager().install()), options=edge_options)
 
-web_login = 'https://www.ibond.thaibma.or.th/login?page=/bondsearch/bondsearchpage'
-web = 'https://www.ibond.thaibma.or.th/yield-curve/government'
-web2 = 'https://www.ibond.thaibma.or.th/mtm-gov-index'
-web3 = 'https://www.ibond.thaibma.or.th/cp-index'
-web4 = 'https://www.ibond.thaibma.or.th/mtm-corp-index'
-web5 = 'https://www.ibond.thaibma.or.th/esg-index'
+web_login = THAIBMA_LOGIN
+web = THAIBMA_YIELD_GOV
+web2 = THAIBMA_MTM_GOV
+web3 = THAIBMA_CP
+web4 = THAIBMA_MTM_CORP
+web5 = THAIBMA_ESG
 
 driver.get(web_login)
 
@@ -217,47 +219,25 @@ def copy_latest_file(dl_path, des_path, _from, _to):
         print(f"Failed to find or copy the latest file with prefix '{_from}' after 180 seconds")
 
 
-dl_path = r"\\w2fsspho101.lhfund.net\FM-RI$\risk\Amornsiri\logfile_formorning\From_load"
-des_path = r"\\w2fsspho101.lhfund.net\FM-RI$\risk\Amornsiri\logfile_formorning"
-
-
-file_mappings = [
-    ('MTMGov_G1_Index_', 'MTMGov_G1'),
-    ('MTMGov_G2_Index_', 'MTMGov_G2'),
-    ('MTMGov_Index_202', 'Gov_Index'),  
-    ('YieldTTM_202','D_YieldTTM'),
-    ('CP_Aminusup_Index','Commercial Paper Index'),
-    ('MTMCorp_Aminusup_G1_Index','CorBond_G1'),
-    ('ESGGOV_Index','ESGGovBond')
-    
-    
-]
-
-for _from, _to in file_mappings:
+for _from, _to in MORNING_PART1_FILE_MAPPINGS:
     log.info(f"Copying file: {_from} → {_to}")
-    copy_latest_file(dl_path, des_path, _from, _to)
+    copy_latest_file(MORNING_DL_DIR, MORNING_DATA_DIR, _from, _to)
 
 log.info("All file copies complete")
 time.sleep(2)
 
-dl_path = r'\\w2fsspho101.lhfund.net\FM-RI$\risk\Amornsiri\logfile_formorning\From_load'
-_from = 'YieldTTM_202'
-des_path2 = r'\\w2fsspho101.lhfund.net\FM-RI$\risk\98.Data File'
-_to = 'D_YieldTTM'
-
-def D_YieldTTM(_from, _to):
+def D_YieldTTM():
     for i in range(360):
         try:
-            list_of_files = glob.glob(f'{dl_path}\\{_from}*.xlsx')
+            list_of_files = glob.glob(f'{MORNING_DL_DIR}\\YieldTTM_202*.xlsx')
             latest_file = max(list_of_files, key=os.path.getctime)
             break
         except:
             time.sleep(0.5)
-    destination_path = f'{des_path2}\\{_to}.xlsx'
-    shutil.copy(latest_file, destination_path)
+    shutil.copy(latest_file, f'{DATA_FILE_DIR}\\D_YieldTTM.xlsx')
 
 
-D_YieldTTM(_from, _to)
+D_YieldTTM()
 
 
 
@@ -288,9 +268,7 @@ def run_excel_macro(file_path, macro_name):
         print("An error occurred:", e)
 
 
-file_path = r'\\w2fsspho101.lhfund.net\FM-RI$\risk\Amornsiri\power_automate.xlsm'
-macro_name = 'UpdateData'
-run_excel_macro(file_path, macro_name)
+run_excel_macro(POWER_AUTOMATE, MACRO_UPDATE_DATA)
 
 
 def get_previous_business_day(reference_date):
@@ -304,14 +282,8 @@ folder = yesterday_business_day.strftime("%Y-%m-%d")
 
 time.sleep(2)
 
-# Exclude temporary files starting with ~$ in the search pattern
-list_of_files = [file for file in glob.glob(r'P:\Fund_EQ\**\*PortVal*') if not os.path.basename(file).startswith('~$')]
+list_of_files = [f for f in glob.glob(LH_REPORT_GLOB) if not os.path.basename(f).startswith('~$')]
 latest_file = max(list_of_files, key=os.path.getctime)
-
-print(latest_file)
-
-destination = r"\\w2fsspho101.lhfund.net\FM-RI$\risk\98.Data File\D_LHReport.xlsx"
-
-shutil.copy2(latest_file, destination)
+shutil.copy2(latest_file, LH_REPORT_DEST)
 log.info(f"Copied LHReport: {latest_file} → {destination}")
 log.info("=== Morning ThaiBMA Part 1 completed ===")
