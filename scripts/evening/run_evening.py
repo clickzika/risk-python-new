@@ -6,7 +6,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.microsoft import EdgeChromiumDriverManager
 from selenium.common.exceptions import NoSuchElementException
-from risk_logger import get_logger
+from risk_logger import get_logger, send_failure_alert
 import sys
 import time
 import os
@@ -30,14 +30,35 @@ from config import (
 )
 
 log = get_logger("GPO")
-log.info("=== GPO evening workflow started ===")
 
+_proj_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+env_path = os.environ.get('RISK_ENV_PATH') or os.path.join(_proj_root, 'scripts', '.env')
+load_dotenv(env_path)
+password = os.getenv('pass')
+username = os.getenv('user')
 
-file_path = POWER_AUTOMATE_PM
-macro_name = MACRO_CREATE_PM
-file_path_Bench = BENCHMARK_XLSM
-name2 = BENCHMARK_XLSM_NAME
+download_dir = EVENING_DL_DIR
+
+options = webdriver.EdgeOptions()
+prefs = {
+    'download.default_directory': download_dir,
+    'plugins.always_open_pdf_externally': True,
+    'profile.default_content_setting_values.automatic_downloads': 1
+}
+options.add_argument("--start-maximized")
+options.add_experimental_option('prefs', prefs)
+service = Service(EdgeChromiumDriverManager().install())
+
+xpath1 = '//*[@id="root"]/div[3]/div[1]/div[3]/div/div[2]/div/div/div/table/tbody/tr/td[13]/div/button/i'
+xpathdate1 = '//*[@id="root"]/div[3]/div[1]/div[3]/div/div[2]/div/div/div/div[1]/div[1]'
+xpath2 = '//*[@id="root"]/div[3]/div[1]/div[3]/div/div[2]/div/div/div/table/tbody/tr[2]/td[13]/div/button/i'
+xpathdate2 = '//*[@id="root"]/div[3]/div[1]/div[3]/div/div[2]/div/div/div/div[1]/div[1]'
+xpath3 = '//*[@id="root"]/div[3]/div[1]/div[3]/div/div[2]/div/div/div/table/tbody/tr[8]/td[14]/div/button/i'
+xpathdate3 = '//*[@id="root"]/div[3]/div[1]/div[3]/div/div[2]/div/div/div/div[1]/div[1]'
+
 macro_name_Bench = MACRO_EVENING_BENCH
+fileGPO = GPO_FIXED_FILE
+fileGPO2 = GPO_EQ_FILE
 
 
 def Create_Afternoon(file_path, macro_name):
@@ -49,79 +70,23 @@ def Create_Afternoon(file_path, macro_name):
         workbook.Close(SaveChanges=False)
         excel_app.Quit()
         while not excel_app.Ready:
-            time.sleep(1)  # รอ 1 วินาทีแล้วเช็คใหม่        
+            time.sleep(1)
         print("Macro executed successfully.")
-
     except Exception as e:
         print("An error occurred:", e)
 
-log.info("Running macro Create_Afternoon on power_automate_for_Afternoon.xlsm")
-Create_Afternoon(file_path, macro_name)
-log.info("Create_Afternoon macro complete")
 
 def open_file_and_run_macro(file_path_Bench: str, name2: str):
-    """
-    เปิดไฟล์ Excel และรันมาโครในไฟล์
-    :param file_path_Bench: เส้นทางของไฟล์ (รวมชื่อไฟล์)
-    :param name2: ชื่อไฟล์ พร้อม .xlsm extension
-    """
     excel_app = win32com.client.Dispatch('Excel.Application')
     excel_app.Visible = True
     wb = excel_app.Workbooks.Open(os.path.abspath(file_path_Bench))
     excel_app.Application.Run(f'{name2}!Module1.{macro_name_Bench}')
-
     while not excel_app.Application.Ready:
-        time.sleep(1)  # รอ 1 วินาทีแล้วเช็คใหม่
-
-    # wb.Close(SaveChanges=True)  # ปิดไฟล์และบันทึกการเปลี่ยนแปลงถ้าจำเป็น
+        time.sleep(1)
     excel_app.Quit()
     del excel_app
 
-#########**********************
 
-yesterday= (datetime.now() - timedelta(days=0)).strftime('%d/%m/%Y')
-today = (datetime.now() - timedelta(days=0)).strftime('%d/%m/%Y')
-#########*************************
-
-xpath1 = '//*[@id="root"]/div[3]/div[1]/div[3]/div/div[2]/div/div/div/table/tbody/tr/td[13]/div/button/i'
-xpathdate1 = '//*[@id="root"]/div[3]/div[1]/div[3]/div/div[2]/div/div/div/div[1]/div[1]'
-
-xpath2 ='//*[@id="root"]/div[3]/div[1]/div[3]/div/div[2]/div/div/div/table/tbody/tr[2]/td[13]/div/button/i'
-xpathdate2 = '//*[@id="root"]/div[3]/div[1]/div[3]/div/div[2]/div/div/div/div[1]/div[1]'
-
-xpath3 = '//*[@id="root"]/div[3]/div[1]/div[3]/div/div[2]/div/div/div/table/tbody/tr[8]/td[14]/div/button/i'
-xpathdate3 = '//*[@id="root"]/div[3]/div[1]/div[3]/div/div[2]/div/div/div/div[1]/div[1]'
-
-web = THAIBMA_LOGIN_ST
-web2 = THAIBMA_LOGIN_BOND
-web3 = THAIBMA_LOGIN_CORP
-
-macro_name = MACRO_FINISH_BMA
-fileGPO = GPO_FIXED_FILE
-fileGPO2 = GPO_EQ_FILE
-
-
-_proj_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-env_path = os.environ.get('RISK_ENV_PATH') or os.path.join(_proj_root, 'scripts', '.env')
-load_dotenv(env_path)
-log.info(f"Loaded credentials from: {env_path}")
-password = os.getenv('pass')
-username = os.getenv('user')
-
-download_dir = EVENING_DL_DIR
-options = webdriver.EdgeOptions()
-prefs = {
-    'download.default_directory': download_dir,
-    'plugins.always_open_pdf_externally': True,
-    'profile.default_content_setting_values.automatic_downloads': 1
-}
-options.add_argument("--start-maximized")
-options.add_experimental_option('prefs', prefs)
-
-service = Service(EdgeChromiumDriverManager().install())
-driver = webdriver.Edge(options=options, service=service)
-
-    
 def LoadFile(driver, web, xpath, xpathdate, file_number, yesterday):
     driver.get(web)
     driver.execute_script("document.body.style.zoom = '0.7'")
@@ -138,52 +103,40 @@ def LoadFile(driver, web, xpath, xpathdate, file_number, yesterday):
 
             if formatted_date == yesterday:
                 try:
-
-                    driver.find_element(By.XPATH,xpath).click()
-
+                    driver.find_element(By.XPATH, xpath).click()
                     time.sleep(6.5)
                     print(f'ไฟล์ {file_number} สำเร็จ')
-                    break  # ถ้าสำเร็จ ออกจากลูปเลย
+                    break
                 except Exception as e:
                     print(f'ไฟล์ {file_number} ไม่สำเร็จ: {e}')
-
             else:
                 time.sleep(1.5)
                 driver.refresh()
                 time.sleep(1.5)
-
         except Exception as e:
             print(f'เกิดข้อผิดพลาดในการตรวจสอบวันที่: {e}')
 
 
-
-def doallTBMA():
+def doallTBMA(yesterday):
     driver = webdriver.Edge(options=options, service=service)
+    try:
+        driver.get(THAIBMA_LOGIN_ST)
+        time.sleep(5)
+        driver.find_element(By.XPATH, "/html/body/div/div/div/main/form/div[1]/input").send_keys(username)
+        driver.find_element(By.XPATH, "/html/body/div/div/div/main/form/div[2]/input").send_keys(password)
+        driver.find_element(By.XPATH, "/html/body/div/div/div/main/form/button").click()
+        time.sleep(5)
 
-    # ล็อกอินแค่ครั้งเดียว
-    driver.get(web)
-    time.sleep(5)
-    driver.find_element(By.XPATH, "/html/body/div/div/div/main/form/div[1]/input").send_keys(username)
-    driver.find_element(By.XPATH, "/html/body/div/div/div/main/form/div[2]/input").send_keys(password)
-    driver.find_element(By.XPATH, "/html/body/div/div/div/main/form/button").click()
-    time.sleep(5)
-
-    # โหลดไฟล์จากแต่ละเว็บ
-    LoadFile(driver, web, xpath1, xpathdate1, 'ST_GBI', yesterday)
-    time.sleep(1)
-    LoadFile(driver, web2, xpath2, xpathdate2, 'GBI_G1', yesterday)
-    time.sleep(1)
-    LoadFile(driver, web3, xpath3, xpathdate3, 'BBBplus', yesterday)
-    time.sleep(3)
-    driver.quit()
-    subprocess.call("TASKKILL /f /IM msedgedriver.exe")
-    time.sleep(4)
-
-
-doallTBMA()
-
-
-#---------------------------------------------------------------------------------
+        LoadFile(driver, THAIBMA_LOGIN_ST, xpath1, xpathdate1, 'ST_GBI', yesterday)
+        time.sleep(1)
+        LoadFile(driver, THAIBMA_LOGIN_BOND, xpath2, xpathdate2, 'GBI_G1', yesterday)
+        time.sleep(1)
+        LoadFile(driver, THAIBMA_LOGIN_CORP, xpath3, xpathdate3, 'BBBplus', yesterday)
+        time.sleep(3)
+    finally:
+        driver.quit()
+        subprocess.call("TASKKILL /f /IM msedgedriver.exe")
+        time.sleep(4)
 
 
 def Transfer(_from, _to):
@@ -208,7 +161,6 @@ def Transfer(_from, _to):
     print('File copied successfully.')
 
 
-
 def run_excel_macro(file_path, macro_name):
     try:
         excel_app = win32com.client.Dispatch("Excel.Application")
@@ -218,96 +170,92 @@ def run_excel_macro(file_path, macro_name):
         workbook.Close(SaveChanges=False)
         excel_app.Quit()
         print("Macro executed successfully.")
-
     except Exception as e:
         print("An error occurred:", e)
+
 
 def partonetransfer():
     time.sleep(3)
     for _from, _to in EVENING_FILE_MAPPINGS:
         Transfer(_from, _to)
     time.sleep(5)
-    run_excel_macro(file_path, macro_name)
-partonetransfer()
+    run_excel_macro(POWER_AUTOMATE_PM, MACRO_CREATE_PM)
 
 
-time.sleep(2)
-
-
-def read_df():
-    while True:
-        df = pd.read_excel(fileGPO, sheet_name='Benchmark - PI')
-        if df.iloc[-1, 0].strftime('%d/%m/%Y') == today and pd.notna(df.iloc[-1, [2, 4, 5]]).all().all() == True:
-            print('complete part one')
-            break
-        else:
-            doallTBMA()
-            partonetransfer()
-read_df()
-subprocess.call("TASKKILL /f /IM msedgedriver.exe")
-
-#-----------------------------------------------------------------------------------------------------------
-today_dash = datetime.now().strftime('%Y-%m-%d')
 def new_set():
     today = datetime.now().strftime('%Y%m%d')
-    today_dash = datetime.now().strftime('%Y-%m-%d')
-    yesterday = (datetime.now()- timedelta(1)).strftime('%Y%m%d')
-    yesterday_dash = (datetime.now()- timedelta(1)).strftime('%Y-%m-%d')
-    global latest_file
-    for i in range(360):    
-        latest_file = max(glob.glob(SET_TRI_GLOB), key=os.path.getmtime)
-        print(latest_file)
-        latest_filename = os.path.basename(latest_file)  # เอาเฉพาะชื่อไฟล์
-        print(latest_filename)
+    global latest_set_file
+    for i in range(360):
+        latest_set_file = max(glob.glob(SET_TRI_GLOB), key=os.path.getmtime)
+        print(latest_set_file)
+        latest_filename = os.path.basename(latest_set_file)
         datefile = latest_filename[7:-4]
         print(datefile)
         if datefile == today:
-
             break
         else:
             print("ไม่มีไฟล์ในโฟลเดอร์นี้")
             time.sleep(2)
-new_set()           
-
-def Check_set():
-    df_set = pd.read_csv(latest_file)
-    if df_set.iloc[0, 0][:10] == today_dash:
-        print('ผ่าน')
-        print(df_set.iloc[0, 0][:10])
-
-    else:
-        new_set()
-Check_set()           
 
 
-shutil.copy(latest_file, f'{EVENING_DATA_DIR}\\set.csv')
+def main():
+    log.info("=== GPO evening workflow started ===")
+    log.info(f"Loaded credentials from: {env_path}")
 
-run_excel_macro(file_path, MACRO_NEW_FINISH_SET)
+    yesterday = (datetime.now() - timedelta(days=0)).strftime('%d/%m/%Y')
+    today = (datetime.now() - timedelta(days=0)).strftime('%d/%m/%Y')
+    today_dash = datetime.now().strftime('%Y-%m-%d')
 
+    log.info("Running macro Create_Afternoon on power_automate_for_Afternoon.xlsm")
+    Create_Afternoon(POWER_AUTOMATE_PM, MACRO_CREATE_PM)
+    log.info("Create_Afternoon macro complete")
 
+    doallTBMA(yesterday)
 
-#--------------------------------------------------------------------------------------------------------------
+    partonetransfer()
 
+    def read_df():
+        while True:
+            df = pd.read_excel(fileGPO, sheet_name='Benchmark - PI')
+            if df.iloc[-1, 0].strftime('%d/%m/%Y') == today and pd.notna(df.iloc[-1, [2, 4, 5]]).all().all():
+                print('complete part one')
+                break
+            else:
+                doallTBMA(yesterday)
+                partonetransfer()
 
-df1 = pd.read_excel(fileGPO,sheet_name = 'Benchmark - PI',header=4 )
-df2 = pd.read_excel(fileGPO2,sheet_name = 'Benchmark - PI',header=4)
+    read_df()
+    subprocess.call("TASKKILL /f /IM msedgedriver.exe")
 
+    global latest_set_file
+    latest_set_file = None
+    new_set()
 
-table_str1 = df1.iloc[:,[0,1,2,4,5]].tail(1).to_html(header=True, index=False)
-table_str2 = df2.iloc[:, [0, 2]].tail(1).to_html(header=True, index=False)
+    def Check_set():
+        df_set = pd.read_csv(latest_set_file)
+        if df_set.iloc[0, 0][:10] == today_dash:
+            print('ผ่าน')
+            print(df_set.iloc[0, 0][:10])
+        else:
+            new_set()
 
-#table_str1 = df1.iloc[:, :7].tail(3).to_html(header=True, index=False)
-#table_str2 = df2.iloc[:, [0, 2, 4]].tail(3).to_html(header=True, index=False)
+    Check_set()
 
-ol = win32com.client.Dispatch('Outlook.Application')
-olmailitem = 0x0
-newmail = ol.CreateItem(olmailitem)
-newmail.Subject = 'อัพเดท GPO'
-newmail.To = EMAIL_RECIPIENTS
-#newmail.To = 'Panisarap@lhfund.co.th ; kornwipad@lhfund.co.th ; Amornsiris@lhfund.co.th'
-#newmail.To = 'Amornsiris@lhfund.co.th'
-############*********************************
-newmail.HTMLBody = f'''
+    shutil.copy(latest_set_file, f'{EVENING_DATA_DIR}\\set.csv')
+    run_excel_macro(POWER_AUTOMATE_PM, MACRO_NEW_FINISH_SET)
+
+    df1 = pd.read_excel(fileGPO, sheet_name='Benchmark - PI', header=4)
+    df2 = pd.read_excel(fileGPO2, sheet_name='Benchmark - PI', header=4)
+
+    table_str1 = df1.iloc[:, [0, 1, 2, 4, 5]].tail(1).to_html(header=True, index=False)
+    table_str2 = df2.iloc[:, [0, 2]].tail(1).to_html(header=True, index=False)
+
+    ol = win32com.client.Dispatch('Outlook.Application')
+    olmailitem = 0x0
+    newmail = ol.CreateItem(olmailitem)
+    newmail.Subject = 'อัพเดท GPO'
+    newmail.To = EMAIL_RECIPIENTS
+    newmail.HTMLBody = f'''
 <html>
 <head>
 <style>
@@ -331,12 +279,15 @@ newmail.HTMLBody = f'''
 </body>
 </html>
 '''
+    newmail.Send()
+    log.info("GPO update email sent successfully")
+    log.info("=== GPO evening workflow completed ===")
 
-# แนบไฟล์ (ถ้ามี)
-# attach = 'C:\\Users\\admin\\Desktop\\Python\\Sample.xlsx'
-# newmail.Attachments.Add(attach)
 
-# ส่งอีเมล
-newmail.Send()
-log.info("GPO update email sent successfully")
-log.info("=== GPO evening workflow completed ===")
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception as e:
+        log.critical(f"Script failed: {e}", exc_info=True)
+        send_failure_alert("GPO", str(e))
+        sys.exit(1)
