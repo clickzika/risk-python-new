@@ -103,7 +103,7 @@ Notion Board: https://www.notion.so/348d9f1fcda181688020dff322287c79
 **Goal:** Prevent credential leaks and add GitHub-level protection.
 
 ### C1 — Audit .gitignore and Verify No Credentials Are Staged
-- **Files:** `.gitignore` (already created), `PP.env`, `two.env`
+- **Files:** `.gitignore` (already created), `scripts/.env`
 - **Steps:**
   1. Run `git status` to confirm .env files are NOT tracked
   2. Run `git log --all --full-history -- "*.env"` to verify no env files in git history
