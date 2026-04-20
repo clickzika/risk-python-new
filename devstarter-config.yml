@@ -1,0 +1,42 @@
+# devstarter-config.yml — DevStarter Project Configuration
+# Single source of truth for risk-python project settings.
+# Secrets (API keys, tokens, passwords) go in .env — never here.
+
+project:
+  name: risk-python
+  description: "LH Fund Risk Automation — daily morning/evening data pipeline for bond indexes, NAV, VaR, and email reporting"
+  version: "1.0.0"
+  status: active
+  type: app
+  language: python
+
+vcs:
+  type: github
+  repo: lhfund/risk-python
+  branch_strategy: simple
+  main_branch: main
+  dev_branch: develop
+  secondary_1: none
+  secondary_2: none
+
+pm:
+  type: github-issues
+
+ci:
+  type: none
+
+secrets:
+  backend: env-file
+
+ai:
+  provider: claude
+  model: claude-sonnet-4-6
+
+team:
+  skill_level: intermediate
+  size: small
+
+stack:
+  frontend: none
+  backend: python
+  database: sqlserver

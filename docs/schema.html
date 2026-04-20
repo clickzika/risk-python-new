@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Database Schema — risk-python</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg-page: #f5f7fa; --bg-header: #ffffff; --bg-sidebar: #f0f2f5;
+    --bg-content: #ffffff; --bg-card: #f8f9fb; --bg-hover: #e8ebf0;
+    --accent: #e94560; --accent-light: #d63851;
+    --text: #1a1a2e; --text-dim: #5a6578; --text-muted: #8493a8;
+    --border: #d8dde4; --border-light: #e2e7ed;
+    --status-draft: #f59e0b; --section-1: #3b82f6; --section-2: #8b5cf6;
+    --section-3: #f59e0b; --section-4: #10b981; --section-5: #ef4444;
+    --section-6: #f97316; --section-7: #06b6d4; --section-8: #ec4899;
+    --header-h: 64px; --sidebar-w: 280px;
+    --code-bg: #f1f5f9; --code-inline-bg: rgba(233,69,96,0.08); --code-inline-color: #d63851;
+    --table-even-bg: rgba(0,0,0,0.02); --table-hover-bg: rgba(233,69,96,0.04);
+    --shadow: 0 1px 3px rgba(0,0,0,0.06); --toggle-bg: #e2e6eb; --toggle-knob: #ffffff;
+    --mermaid-bg: rgba(0,0,0,0.02);
+  }
+  [data-theme="dark"] {
+    --bg-page: #0f0f23; --bg-header: #1a1a2e; --bg-sidebar: #16213e;
+    --bg-content: #1e1e3a; --bg-card: #252547; --bg-hover: #0f3460;
+    --accent: #e94560; --accent-light: #ff6b81;
+    --text: #eeeeee; --text-dim: #94a3b8; --text-muted: #64748b;
+    --border: #1e3a5f; --border-light: #2d4a6f;
+    --code-bg: #0d0d1a; --code-inline-bg: rgba(233,69,96,0.1); --code-inline-color: #ff6b81;
+    --table-even-bg: rgba(255,255,255,0.02); --table-hover-bg: rgba(233,69,96,0.05);
+    --shadow: 0 1px 3px rgba(0,0,0,0.3); --toggle-bg: #1e3a5f; --toggle-knob: #e94560;
+    --mermaid-bg: rgba(255,255,255,0.03);
+  }
+  body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg-page); color: var(--text); line-height: 1.6; height: 100vh; overflow: hidden; transition: background 0.3s, color 0.3s; }
+  .doc-header { position: fixed; top: 0; left: 0; right: 0; height: var(--header-h); background: var(--bg-header); border-bottom: 1px solid var(--border); box-shadow: var(--shadow); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; z-index: 100; }
+  .doc-header-left { display: flex; align-items: center; gap: 16px; }
+  .doc-header-logo { width: 36px; height: 36px; background: var(--accent); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; color: #fff; }
+  .doc-header-title { display: flex; flex-direction: column; }
+  .doc-header-project { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; color: var(--text); }
+  .doc-header-docname { font-size: 12px; color: var(--text-dim); font-weight: 500; }
+  .doc-header-right { display: flex; align-items: center; gap: 16px; }
+  .doc-header-meta { text-align: right; font-size: 12px; color: var(--text-dim); }
+  .doc-status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .doc-status-badge.draft { background: rgba(245,158,11,0.15); color: var(--status-draft); border: 1px solid rgba(245,158,11,0.3); }
+  .theme-toggle { display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
+  .theme-toggle-icon { font-size: 14px; color: var(--text-dim); }
+  .theme-toggle-track { width: 44px; height: 24px; background: var(--toggle-bg); border-radius: 12px; position: relative; transition: background 0.3s; border: 1px solid var(--border); }
+  .theme-toggle-knob { width: 18px; height: 18px; background: var(--toggle-knob); border-radius: 50%; position: absolute; top: 2px; left: 3px; transition: transform 0.3s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+  [data-theme="dark"] .theme-toggle-knob { transform: translateX(20px); }
+  .doc-sidebar { position: fixed; top: var(--header-h); left: 0; bottom: 0; width: var(--sidebar-w); background: var(--bg-sidebar); border-right: 1px solid var(--border); overflow-y: auto; padding: 20px 0; z-index: 50; }
+  .doc-sidebar::-webkit-scrollbar { width: 4px; }
+  .doc-sidebar::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 4px; }
+  .doc-sidebar-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-muted); padding: 0 20px 12px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+  .toc-list { list-style: none; padding: 0; }
+  .toc-item { display: block; }
+  .toc-link { display: flex; align-items: center; gap: 10px; padding: 8px 20px; color: var(--text-dim); text-decoration: none; font-size: 13px; font-weight: 500; transition: all 0.15s ease; border-left: 3px solid transparent; }
+  .toc-link:hover { background: var(--bg-hover); color: var(--text); border-left-color: var(--accent); }
+  .toc-link.active { background: rgba(233,69,96,0.1); color: var(--accent-light); border-left-color: var(--accent); }
+  .toc-number { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 6px; font-size: 11px; font-weight: 700; flex-shrink: 0; color: #fff; }
+  .toc-number.s1 { background: var(--section-1); } .toc-number.s2 { background: var(--section-2); }
+  .toc-number.s3 { background: var(--section-3); } .toc-number.s4 { background: var(--section-4); }
+  .toc-number.s5 { background: var(--section-5); } .toc-number.s6 { background: var(--section-6); }
+  .toc-number.s7 { background: var(--section-7); }
+  .doc-info-card { margin: 16px 12px 0; padding: 14px 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; font-size: 12px; }
+  .doc-info-row { display: flex; justify-content: space-between; padding: 4px 0; color: var(--text-dim); }
+  .doc-info-row span:first-child { color: var(--text-muted); }
+  .doc-content { margin-left: var(--sidebar-w); margin-top: var(--header-h); height: calc(100vh - var(--header-h)); overflow-y: auto; padding: 40px 48px 80px; background: var(--bg-content); }
+  .doc-content::-webkit-scrollbar { width: 6px; }
+  .doc-content::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 6px; }
+  .section-header { display: flex; align-items: center; gap: 14px; margin: 48px 0 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+  .section-header:first-child { margin-top: 0; }
+  .section-number { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; font-size: 14px; font-weight: 800; color: #fff; flex-shrink: 0; }
+  .section-number.s1 { background: var(--section-1); } .section-number.s2 { background: var(--section-2); }
+  .section-number.s3 { background: var(--section-3); } .section-number.s4 { background: var(--section-4); }
+  .section-number.s5 { background: var(--section-5); } .section-number.s6 { background: var(--section-6); }
+  .section-number.s7 { background: var(--section-7); }
+  .section-title { font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
+  h3 { font-size: 16px; font-weight: 600; color: var(--text); margin: 28px 0 12px; border-left: 3px solid var(--accent); padding-left: 12px; }
+  h4 { font-size: 14px; font-weight: 600; color: var(--text-dim); margin: 20px 0 8px; }
+  p { color: var(--text-dim); margin-bottom: 16px; font-size: 14px; line-height: 1.7; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0 24px; font-size: 13px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+  thead th { background: var(--bg-sidebar); color: var(--text); font-weight: 600; text-align: left; padding: 12px 16px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid var(--accent); }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s ease; }
+  tbody tr:nth-child(even) { background: var(--table-even-bg); }
+  tbody tr:hover { background: var(--table-hover-bg); }
+  td { padding: 10px 16px; color: var(--text-dim); vertical-align: top; }
+  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; overflow-x: auto; margin: 12px 0 20px; font-size: 13px; line-height: 1.5; }
+  code { font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; font-size: 13px; }
+  :not(pre) > code { background: var(--code-inline-bg); color: var(--code-inline-color); padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+  ul, ol { margin: 8px 0 16px 24px; color: var(--text-dim); font-size: 14px; }
+  li { margin-bottom: 6px; line-height: 1.6; }
+  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; margin: 16px 0 24px; }
+  .card-title { font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--text); }
+  .note { border-left: 4px solid var(--section-1); background: rgba(59,130,246,0.05); }
+  .warning { border-left: 4px solid var(--status-draft); background: rgba(245,158,11,0.05); }
+  .critical { border-left: 4px solid var(--section-5); background: rgba(239,68,68,0.05); }
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+  .badge-red { background: rgba(239,68,68,0.15); color: #ef4444; }
+  .badge-green { background: rgba(16,185,129,0.15); color: #10b981; }
+  .badge-blue { background: rgba(59,130,246,0.15); color: #3b82f6; }
+  .badge-yellow { background: rgba(245,158,11,0.15); color: #f59e0b; }
+  .badge-purple { background: rgba(139,92,246,0.15); color: #8b5cf6; }
+  .badge-gray { background: rgba(100,116,139,0.15); color: #94a3b8; }
+  .mermaid { background: var(--mermaid-bg); border: 1px solid var(--border); border-radius: 10px; padding: 24px; margin: 16px 0 24px; text-align: center; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+  @media (max-width: 768px) { .doc-sidebar { display: none; } .doc-content { margin-left: 0; padding: 24px 16px 60px; } }
+  @media print { .doc-header { position: static; } .doc-sidebar { display: none; } .doc-content { margin-left: 0; height: auto; overflow: visible; padding: 20px; } body { background: #fff; color: #000; } .theme-toggle { display: none; } }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+  var savedTheme = localStorage.getItem('docportal-theme');
+  mermaid.initialize({ theme: savedTheme === 'dark' ? 'dark' : 'default', startOnLoad: true });
+</script>
+</head>
+<body>
+
+<header class="doc-header">
+  <div class="doc-header-left">
+    <div class="doc-header-logo">RP</div>
+    <div class="doc-header-title">
+      <div class="doc-header-project">risk-python</div>
+      <div class="doc-header-docname">Database Schema Document</div>
+    </div>
+  </div>
+  <div class="doc-header-right">
+    <div class="doc-header-meta">
+      <div>Version 1.0 · 2026-04-20</div>
+      <div>Author: Tech Lead (reverse-engineered from SQL)</div>
+    </div>
+    <span class="doc-status-badge draft">● Draft</span>
+    <div class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
+      <span class="theme-toggle-icon" id="themeIcon">&#9788;</span>
+      <div class="theme-toggle-track"><div class="theme-toggle-knob"></div></div>
+    </div>
+  </div>
+</header>
+
+<nav class="doc-sidebar">
+  <div class="doc-sidebar-title">Table of Contents</div>
+  <ul class="toc-list">
+    <li class="toc-item"><a href="#section-1" class="toc-link active"><span class="toc-number s1">1</span> Database Overview</a></li>
+    <li class="toc-item"><a href="#section-2" class="toc-link"><span class="toc-number s2">2</span> LHF_SYSTEM</a></li>
+    <li class="toc-item"><a href="#section-3" class="toc-link"><span class="toc-number s3">3</span> LHF_PERFORMANCE</a></li>
+    <li class="toc-item"><a href="#section-4" class="toc-link"><span class="toc-number s4">4</span> INV_LHF</a></li>
+    <li class="toc-item"><a href="#section-5" class="toc-link"><span class="toc-number s5">5</span> FIN_REG_LHF</a></li>
+    <li class="toc-item"><a href="#section-6" class="toc-link"><span class="toc-number s6">6</span> VaR Query Logic</a></li>
+    <li class="toc-item"><a href="#section-7" class="toc-link"><span class="toc-number s7">7</span> Data Flow</a></li>
+  </ul>
+  <div class="doc-info-card">
+    <div class="doc-info-row"><span>Version</span><span>1.0</span></div>
+    <div class="doc-info-row"><span>Status</span><span>Draft</span></div>
+    <div class="doc-info-row"><span>Date</span><span>2026-04-20</span></div>
+    <div class="doc-info-row"><span>Engine</span><span>SQL Server</span></div>
+  </div>
+</nav>
+
+<main class="doc-content">
+
+  <div class="section-header" id="section-1">
+    <span class="section-number s1">1</span>
+    <h2 class="section-title">Database Overview</h2>
+  </div>
+  <p>risk-python queries four SQL Server databases. All are read-only from the perspective of these Python scripts — no INSERT/UPDATE/DELETE operations are performed by the automation scripts.</p>
+  <div class="card warning">
+    <div class="card-title">⚠️ Schema is reverse-engineered</div>
+    <p>Column types, nullability, and indexes are inferred from SQL query usage. The actual DDL must be confirmed against the SQL Server instance. Columns marked [INFERRED] have types estimated from context.</p>
+  </div>
+  <table>
+    <thead><tr><th>Database</th><th>Server</th><th>Purpose</th><th>Scripts Using It</th></tr></thead>
+    <tbody>
+      <tr><td><code>LHF_SYSTEM</code></td><td>Default instance</td><td>Bloomberg MTM intraday data</td><td>Bloomberg.sql</td></tr>
+      <tr><td><code>LHF_PERFORMANCE</code></td><td>Default instance</td><td>Fund NAV performance history</td><td>Final_VaR.sql, MF/PF/PVD_NAV.sql</td></tr>
+      <tr><td><code>INV_LHF</code></td><td>Default instance</td><td>Investment portfolio holdings</td><td>Holding_Daily.sql</td></tr>
+      <tr><td><code>FIN_REG_LHF</code></td><td><code>192.168.102.7\DB2008</code></td><td>Regulatory / holiday calendar</td><td>Final_VaR.sql</td></tr>
+    </tbody>
+  </table>
+
+  <div class="section-header" id="section-2">
+    <span class="section-number s2">2</span>
+    <h2 class="section-title">LHF_SYSTEM — Bloomberg MTM Data</h2>
+  </div>
+  <h3>LHF_SYSTEM.DBO.LHF_BBG_DL_MTM_FX_EQ_MORNING</h3>
+  <p>Stores Bloomberg Mark-to-Market (MTM) prices for FX and equity securities downloaded each morning. Used to produce a pivoted price matrix by date.</p>
+  <table>
+    <thead><tr><th>Column</th><th>Type [INFERRED]</th><th>Description</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><code>MTMDATE</code></td><td>DATE</td><td>Price date</td><td>Used as row key in pivot; ORDER BY column</td></tr>
+      <tr><td><code>PRICECODE</code></td><td>NVARCHAR</td><td>Bloomberg ticker / price code</td><td>Becomes column headers in pivot query</td></tr>
+      <tr><td><code>PX_LAST</code></td><td>DECIMAL</td><td>Last price</td><td>Aggregated with SUM in PIVOT (unique per PRICECODE per date)</td></tr>
+    </tbody>
+  </table>
+  <h4>Bloomberg.sql — Pivot Query Pattern</h4>
+  <pre><code>-- Dynamic pivot: each PRICECODE becomes a column
+SELECT MTMDATE, [PRICECODE_A], [PRICECODE_B], ...
+FROM LHF_BBG_DL_MTM_FX_EQ_MORNING
+PIVOT (SUM(PX_LAST) FOR PRICECODE IN (...)) AS PivotTable
+ORDER BY MTMDATE;</code></pre>
+
+  <div class="section-header" id="section-3">
+    <span class="section-number s3">3</span>
+    <h2 class="section-title">LHF_PERFORMANCE — Fund NAV</h2>
+  </div>
+  <h3>LHF_PERFORMANCE.dbo.ViewFundNavAll</h3>
+  <p>A view (or table) containing the complete NAV history for all fund types. Core dataset for VaR and NAV reporting.</p>
+  <table>
+    <thead><tr><th>Column</th><th>Type [INFERRED]</th><th>Description</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><code>FundCode</code></td><td>NVARCHAR</td><td>Fund identifier (e.g. <code>LHMM-A</code>)</td><td>Partition key in window functions</td></tr>
+      <tr><td><code>NAVDate</code></td><td>DATE</td><td>NAV valuation date</td><td>Filtered to exclude weekends and holidays</td></tr>
+      <tr><td><code>NAVPerUnitDiv</code></td><td>DECIMAL</td><td>NAV per unit (after dividend adjustment)</td><td>Used to compute DailyReturn via LAG()</td></tr>
+      <tr><td><code>FundType</code></td><td>NVARCHAR</td><td>Fund category</td><td>Values: <code>Mutual_Fund</code>, <code>Private_Fund</code>, <code>PVD</code></td></tr>
+    </tbody>
+  </table>
+  <h3>Derived Columns (computed in Final_VaR.sql)</h3>
+  <table>
+    <thead><tr><th>Column</th><th>Formula</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>Nav_previous</code></td><td><code>LAG(NAVPerUnitDiv, 1) OVER (PARTITION BY FundCode ORDER BY NAVDate)</code></td><td>Prior day NAV</td></tr>
+      <tr><td><code>DailyReturn</code></td><td><code>(NAVPerUnitDiv / Nav_previous - 1) * 100</code></td><td>Daily return %</td></tr>
+      <tr><td><code>RowNum</code></td><td><code>ROW_NUMBER() OVER (PARTITION BY FundCode ORDER BY NAVDate DESC)</code></td><td>Used to select last N trading days for VaR window</td></tr>
+    </tbody>
+  </table>
+
+  <div class="section-header" id="section-4">
+    <span class="section-number s4">4</span>
+    <h2 class="section-title">INV_LHF — Portfolio Holdings</h2>
+  </div>
+  <h3>INV_LHF.INVEST.HOLDING</h3>
+  <p>Daily snapshot of portfolio holdings. The query reads yesterday's holdings (<code>DATEADD(day, -1, CAST(GETDATE() AS DATE))</code>).</p>
+  <table>
+    <thead><tr><th>Column</th><th>Type [INFERRED]</th><th>Description</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><code>PORTFOLIOCODE</code></td><td>NVARCHAR</td><td>Portfolio identifier (e.g. <code>LHVN</code>)</td><td>Filter column — commented out in base query</td></tr>
+      <tr><td><code>Date</code></td><td>DATE (computed)</td><td>As-of date (yesterday)</td><td>Computed in SELECT as <code>DATEADD(day,-1,GETDATE())</code></td></tr>
+      <tr><td>... (all columns)</td><td>Various</td><td>Full holding record</td><td>SELECT * used — full schema unknown without DDL access</td></tr>
+    </tbody>
+  </table>
+  <div class="card note">
+    <div class="card-title">Note — Full Schema Unknown</div>
+    <p>The query uses <code>SELECT *</code> from INVEST.HOLDING. The complete column list requires direct SQL Server access. Common fields in holding tables include: security code, quantity, market value, currency, sector.</p>
+  </div>
+
+  <div class="section-header" id="section-5">
+    <span class="section-number s5">5</span>
+    <h2 class="section-title">FIN_REG_LHF — Holiday Calendar</h2>
+  </div>
+  <h3>[192.168.102.7\DB2008].FIN_REG_LHF.dbo.holiday</h3>
+  <p>Thai market holiday calendar used to filter NAV dates. Located on a separate legacy SQL Server 2008 instance.</p>
+  <table>
+    <thead><tr><th>Column</th><th>Type [INFERRED]</th><th>Description</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><code>HolidayDate</code></td><td>DATE</td><td>Date of market holiday</td><td>Excluded from NAV date filters</td></tr>
+      <tr><td><code>CalendarID</code></td><td>INT</td><td>Calendar type identifier</td><td>Filtered on value <code>1</code> (Thai market calendar)</td></tr>
+    </tbody>
+  </table>
+  <div class="card warning">
+    <div class="card-title">⚠️ Legacy Server Dependency</div>
+    <p>This database is on a separate server (<code>192.168.102.7\DB2008</code> — SQL Server 2008). Cross-server linked server connection must be configured. SQL Server 2008 is end-of-life and a security risk.</p>
+  </div>
+
+  <div class="section-header" id="section-6">
+    <span class="section-number s6">6</span>
+    <h2 class="section-title">VaR Query Logic (Final_VaR.sql)</h2>
+  </div>
+  <p>The VaR calculation uses a parametric historical simulation approach over a configurable lookback window.</p>
+  <h3>Parameters</h3>
+  <table>
+    <thead><tr><th>Parameter</th><th>Placeholder</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>@Date1</td><td><code>###XXX###</code></td><td>Reference date for VaR calculation (char 10)</td></tr>
+      <tr><td>@Numdate</td><td><code>##YY#</code></td><td>Number of trading days lookback window (e.g. 250)</td></tr>
+      <tr><td>@Confidence</td><td><code>#X#Y</code></td><td>Confidence level (e.g. 0.95 or 0.99)</td></tr>
+    </tbody>
+  </table>
+  <h3>CTE Chain</h3>
+  <pre><code>RankedNAV  → computes DailyReturn per fund using LAG()
+           → filters: weekends excluded, holidays excluded, null NAV excluded
+CTEa       → adds ROW_NUMBER() DESC per fund, filters DailyReturn != 0, Mutual_Fund only
+CTEb       → selects last @Numdate rows per fund (the lookback window)
+[Final]    → applies percentile / confidence calculation for VaR</code></pre>
+
+  <div class="section-header" id="section-7">
+    <span class="section-number s7">7</span>
+    <h2 class="section-title">Data Flow Diagram</h2>
+  </div>
+  <div class="mermaid">
+graph LR
+    BB[Bloomberg\nNetwork Share] -->|Excel .xls| GPO[GPO.py\nGPO_only_send_email.py]
+    TH[ThaiBMA Website] -->|Selenium download| MOR[Run_morning_ThaiBMA.py]
+    MOR -->|Excel .xlsx| NS[Network Share\nw2fsspho101]
+
+    SQL1[LHF_SYSTEM\nLHF_BBG_DL_MTM_FX_EQ_MORNING] -->|Bloomberg.sql| PIVOT[Price Matrix]
+    SQL2[LHF_PERFORMANCE\nViewFundNavAll] -->|Final_VaR.sql| VAR[VaR Report]
+    SQL3[INV_LHF\nHOLDING] -->|Holding_Daily.sql| HOLD[Holdings Report]
+    SQL4[FIN_REG_LHF\nholiday] -->|holiday filter| VAR
+
+    GPO -->|Outlook| EMAIL[Email: risk@lhfund.co.th\noperation@lhfund.co.th]
+  </div>
+
+</main>
+
+<script>
+  function toggleTheme() {
+    var html = document.documentElement;
+    var isDark = html.getAttribute('data-theme') === 'dark';
+    if (isDark) { html.removeAttribute('data-theme'); localStorage.setItem('docportal-theme', 'light'); document.getElementById('themeIcon').innerHTML = '&#9788;'; }
+    else { html.setAttribute('data-theme', 'dark'); localStorage.setItem('docportal-theme', 'dark'); document.getElementById('themeIcon').innerHTML = '&#9790;'; }
+  }
+  (function() { var saved = localStorage.getItem('docportal-theme'); if (saved === 'dark') { document.documentElement.setAttribute('data-theme', 'dark'); document.getElementById('themeIcon').innerHTML = '&#9790;'; } })();
+  const sections = document.querySelectorAll('.section-header[id]');
+  const tocLinks = document.querySelectorAll('.toc-link');
+  const content = document.querySelector('.doc-content');
+  content.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(s => { if (content.scrollTop >= s.offsetTop - content.offsetTop - 100) current = s.id; });
+    tocLinks.forEach(l => { l.classList.remove('active'); if (l.getAttribute('href') === '#' + current) l.classList.add('active'); });
+  });
+  tocLinks.forEach(link => { link.addEventListener('click', e => { e.preventDefault(); const t = document.querySelector(link.getAttribute('href')); if (t) content.scrollTo({ top: t.offsetTop - content.offsetTop - 20, behavior: 'smooth' }); }); });
+</script>
+</body>
+</html>

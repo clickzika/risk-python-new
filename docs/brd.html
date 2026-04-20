@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Business Requirements Document — risk-python</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg-page: #f5f7fa; --bg-header: #ffffff; --bg-sidebar: #f0f2f5;
+    --bg-content: #ffffff; --bg-card: #f8f9fb; --bg-hover: #e8ebf0;
+    --accent: #e94560; --accent-light: #d63851;
+    --text: #1a1a2e; --text-dim: #5a6578; --text-muted: #8493a8;
+    --border: #d8dde4; --border-light: #e2e7ed;
+    --status-draft: #f59e0b; --status-review: #3b82f6; --status-approved: #10b981;
+    --section-1: #3b82f6; --section-2: #8b5cf6; --section-3: #f59e0b;
+    --section-4: #10b981; --section-5: #ef4444; --section-6: #f97316;
+    --section-7: #06b6d4; --section-8: #ec4899; --section-9: #6366f1; --section-10: #14b8a6;
+    --header-h: 64px; --sidebar-w: 280px;
+    --code-bg: #f1f5f9; --code-inline-bg: rgba(233,69,96,0.08); --code-inline-color: #d63851;
+    --table-even-bg: rgba(0,0,0,0.02); --table-hover-bg: rgba(233,69,96,0.04);
+    --shadow: 0 1px 3px rgba(0,0,0,0.06); --toggle-bg: #e2e6eb; --toggle-knob: #ffffff;
+    --mermaid-bg: rgba(0,0,0,0.02);
+  }
+  [data-theme="dark"] {
+    --bg-page: #0f0f23; --bg-header: #1a1a2e; --bg-sidebar: #16213e;
+    --bg-content: #1e1e3a; --bg-card: #252547; --bg-hover: #0f3460;
+    --accent: #e94560; --accent-light: #ff6b81;
+    --text: #eeeeee; --text-dim: #94a3b8; --text-muted: #64748b;
+    --border: #1e3a5f; --border-light: #2d4a6f;
+    --code-bg: #0d0d1a; --code-inline-bg: rgba(233,69,96,0.1); --code-inline-color: #ff6b81;
+    --table-even-bg: rgba(255,255,255,0.02); --table-hover-bg: rgba(233,69,96,0.05);
+    --shadow: 0 1px 3px rgba(0,0,0,0.3); --toggle-bg: #1e3a5f; --toggle-knob: #e94560;
+    --mermaid-bg: rgba(255,255,255,0.03);
+  }
+  body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg-page); color: var(--text); line-height: 1.6; height: 100vh; overflow: hidden; transition: background 0.3s, color 0.3s; }
+  .doc-header { position: fixed; top: 0; left: 0; right: 0; height: var(--header-h); background: var(--bg-header); border-bottom: 1px solid var(--border); box-shadow: var(--shadow); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; z-index: 100; transition: background 0.3s, border-color 0.3s; }
+  .doc-header-left { display: flex; align-items: center; gap: 16px; }
+  .doc-header-logo { width: 36px; height: 36px; background: var(--accent); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; color: #fff; }
+  .doc-header-title { display: flex; flex-direction: column; }
+  .doc-header-project { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; color: var(--text); }
+  .doc-header-docname { font-size: 12px; color: var(--text-dim); font-weight: 500; }
+  .doc-header-right { display: flex; align-items: center; gap: 16px; }
+  .doc-header-meta { text-align: right; font-size: 12px; color: var(--text-dim); }
+  .doc-status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .doc-status-badge.draft { background: rgba(245,158,11,0.15); color: var(--status-draft); border: 1px solid rgba(245,158,11,0.3); }
+  .theme-toggle { display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
+  .theme-toggle-icon { font-size: 14px; color: var(--text-dim); }
+  .theme-toggle-track { width: 44px; height: 24px; background: var(--toggle-bg); border-radius: 12px; position: relative; transition: background 0.3s; border: 1px solid var(--border); }
+  .theme-toggle-knob { width: 18px; height: 18px; background: var(--toggle-knob); border-radius: 50%; position: absolute; top: 2px; left: 3px; transition: transform 0.3s, background 0.3s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+  [data-theme="dark"] .theme-toggle-knob { transform: translateX(20px); }
+  .doc-sidebar { position: fixed; top: var(--header-h); left: 0; bottom: 0; width: var(--sidebar-w); background: var(--bg-sidebar); border-right: 1px solid var(--border); overflow-y: auto; padding: 20px 0; z-index: 50; transition: background 0.3s, border-color 0.3s; }
+  .doc-sidebar::-webkit-scrollbar { width: 4px; }
+  .doc-sidebar::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 4px; }
+  .doc-sidebar-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-muted); padding: 0 20px 12px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+  .toc-list { list-style: none; padding: 0; }
+  .toc-item { display: block; }
+  .toc-link { display: flex; align-items: center; gap: 10px; padding: 8px 20px; color: var(--text-dim); text-decoration: none; font-size: 13px; font-weight: 500; transition: all 0.15s ease; border-left: 3px solid transparent; }
+  .toc-link:hover { background: var(--bg-hover); color: var(--text); border-left-color: var(--accent); }
+  .toc-link.active { background: rgba(233,69,96,0.1); color: var(--accent-light); border-left-color: var(--accent); }
+  .toc-number { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 6px; font-size: 11px; font-weight: 700; flex-shrink: 0; color: #fff; }
+  .toc-number.s1 { background: var(--section-1); } .toc-number.s2 { background: var(--section-2); }
+  .toc-number.s3 { background: var(--section-3); } .toc-number.s4 { background: var(--section-4); }
+  .toc-number.s5 { background: var(--section-5); } .toc-number.s6 { background: var(--section-6); }
+  .toc-number.s7 { background: var(--section-7); } .toc-number.s8 { background: var(--section-8); }
+  .doc-info-card { margin: 16px 12px 0; padding: 14px 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; font-size: 12px; transition: background 0.3s, border-color 0.3s; }
+  .doc-info-row { display: flex; justify-content: space-between; padding: 4px 0; color: var(--text-dim); }
+  .doc-info-row span:first-child { color: var(--text-muted); }
+  .doc-content { margin-left: var(--sidebar-w); margin-top: var(--header-h); height: calc(100vh - var(--header-h)); overflow-y: auto; padding: 40px 48px 80px; background: var(--bg-content); transition: background 0.3s; }
+  .doc-content::-webkit-scrollbar { width: 6px; }
+  .doc-content::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 6px; }
+  .section-header { display: flex; align-items: center; gap: 14px; margin: 48px 0 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+  .section-header:first-child { margin-top: 0; }
+  .section-number { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; font-size: 14px; font-weight: 800; color: #fff; flex-shrink: 0; }
+  .section-number.s1 { background: var(--section-1); } .section-number.s2 { background: var(--section-2); }
+  .section-number.s3 { background: var(--section-3); } .section-number.s4 { background: var(--section-4); }
+  .section-number.s5 { background: var(--section-5); } .section-number.s6 { background: var(--section-6); }
+  .section-number.s7 { background: var(--section-7); } .section-number.s8 { background: var(--section-8); }
+  .section-title { font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
+  h3 { font-size: 16px; font-weight: 600; color: var(--text); margin: 28px 0 12px; border-left: 3px solid var(--accent); padding-left: 12px; }
+  h4 { font-size: 14px; font-weight: 600; color: var(--text-dim); margin: 20px 0 8px; }
+  p { color: var(--text-dim); margin-bottom: 16px; font-size: 14px; line-height: 1.7; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0 24px; font-size: 13px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+  thead th { background: var(--bg-sidebar); color: var(--text); font-weight: 600; text-align: left; padding: 12px 16px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid var(--accent); transition: background 0.3s; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s ease; }
+  tbody tr:nth-child(even) { background: var(--table-even-bg); }
+  tbody tr:hover { background: var(--table-hover-bg); }
+  td { padding: 10px 16px; color: var(--text-dim); vertical-align: top; }
+  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; overflow-x: auto; margin: 12px 0 20px; font-size: 13px; line-height: 1.5; transition: background 0.3s, border-color 0.3s; }
+  code { font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; font-size: 13px; }
+  :not(pre) > code { background: var(--code-inline-bg); color: var(--code-inline-color); padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+  ul, ol { margin: 8px 0 16px 24px; color: var(--text-dim); font-size: 14px; }
+  li { margin-bottom: 6px; line-height: 1.6; }
+  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; margin: 16px 0 24px; transition: background 0.3s, border-color 0.3s; }
+  .card-title { font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--text); }
+  .note { border-left: 4px solid var(--section-1); background: rgba(59,130,246,0.05); }
+  .warning { border-left: 4px solid var(--status-draft); background: rgba(245,158,11,0.05); }
+  .critical { border-left: 4px solid var(--section-5); background: rgba(239,68,68,0.05); }
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+  .badge-red { background: rgba(239,68,68,0.15); color: #ef4444; }
+  .badge-green { background: rgba(16,185,129,0.15); color: #10b981; }
+  .badge-blue { background: rgba(59,130,246,0.15); color: #3b82f6; }
+  .badge-yellow { background: rgba(245,158,11,0.15); color: #f59e0b; }
+  .badge-gray { background: rgba(100,116,139,0.15); color: #94a3b8; }
+  .mermaid { background: var(--mermaid-bg); border: 1px solid var(--border); border-radius: 10px; padding: 24px; margin: 16px 0 24px; text-align: center; transition: background 0.3s, border-color 0.3s; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+  @media (max-width: 768px) { .doc-sidebar { display: none; } .doc-content { margin-left: 0; padding: 24px 16px 60px; } }
+  @media print { .doc-header { position: static; } .doc-sidebar { display: none; } .doc-content { margin-left: 0; height: auto; overflow: visible; padding: 20px; } body { background: #fff; color: #000; } .theme-toggle { display: none; } }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+  var savedTheme = localStorage.getItem('docportal-theme');
+  mermaid.initialize({ theme: savedTheme === 'dark' ? 'dark' : 'default', startOnLoad: true });
+</script>
+</head>
+<body>
+
+<header class="doc-header">
+  <div class="doc-header-left">
+    <div class="doc-header-logo">RP</div>
+    <div class="doc-header-title">
+      <div class="doc-header-project">risk-python</div>
+      <div class="doc-header-docname">Business Requirements Document (BRD)</div>
+    </div>
+  </div>
+  <div class="doc-header-right">
+    <div class="doc-header-meta">
+      <div>Version 1.0 · 2026-04-20</div>
+      <div>Author: BA Agent (reverse-engineered)</div>
+    </div>
+    <span class="doc-status-badge draft">● Draft</span>
+    <div class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
+      <span class="theme-toggle-icon" id="themeIcon">&#9788;</span>
+      <div class="theme-toggle-track"><div class="theme-toggle-knob"></div></div>
+    </div>
+  </div>
+</header>
+
+<nav class="doc-sidebar">
+  <div class="doc-sidebar-title">Table of Contents</div>
+  <ul class="toc-list">
+    <li class="toc-item"><a href="#section-1" class="toc-link active"><span class="toc-number s1">1</span> Executive Summary</a></li>
+    <li class="toc-item"><a href="#section-2" class="toc-link"><span class="toc-number s2">2</span> Scope</a></li>
+    <li class="toc-item"><a href="#section-3" class="toc-link"><span class="toc-number s3">3</span> Stakeholders</a></li>
+    <li class="toc-item"><a href="#section-4" class="toc-link"><span class="toc-number s4">4</span> AS-IS State</a></li>
+    <li class="toc-item"><a href="#section-5" class="toc-link"><span class="toc-number s5">5</span> Functional Requirements</a></li>
+    <li class="toc-item"><a href="#section-6" class="toc-link"><span class="toc-number s6">6</span> Non-Functional Requirements</a></li>
+    <li class="toc-item"><a href="#section-7" class="toc-link"><span class="toc-number s7">7</span> Data Requirements</a></li>
+    <li class="toc-item"><a href="#section-8" class="toc-link"><span class="toc-number s8">8</span> Open Issues</a></li>
+  </ul>
+  <div class="doc-info-card">
+    <div class="doc-info-row"><span>Version</span><span>1.0</span></div>
+    <div class="doc-info-row"><span>Status</span><span>Draft</span></div>
+    <div class="doc-info-row"><span>Date</span><span>2026-04-20</span></div>
+    <div class="doc-info-row"><span>Author</span><span>BA Agent</span></div>
+  </div>
+</nav>
+
+<main class="doc-content">
+
+  <div class="section-header" id="section-1">
+    <span class="section-number s1">1</span>
+    <h2 class="section-title">Executive Summary</h2>
+  </div>
+  <p><strong>Problem:</strong> The Risk team at LH Fund Management must process daily bond index data, NAV figures, VaR calculations, and performance reports. Previously this required manual downloads, Excel updates, and email composition — a time-consuming, error-prone process done before and after market hours each trading day.</p>
+  <p><strong>Solution:</strong> <code>risk-python</code> automates the full morning and evening data pipeline: web scraping ThaiBMA bond indexes, triggering Excel VBA macros, and dispatching formatted email reports via Outlook — all with zero manual intervention.</p>
+  <h3>Business Objectives</h3>
+  <table>
+    <thead><tr><th>ID</th><th>Objective</th><th>Success Metric</th></tr></thead>
+    <tbody>
+      <tr><td>OBJ-01</td><td>Eliminate manual daily data downloads</td><td>0 manual steps in morning workflow</td></tr>
+      <tr><td>OBJ-02</td><td>Ensure bond index data arrives before 9:00 AM daily</td><td>Scripts complete by 08:50 AM on trading days</td></tr>
+      <tr><td>OBJ-03</td><td>Automate GPO performance email to risk and operations teams</td><td>Email sent within 15 min of script trigger</td></tr>
+      <tr><td>OBJ-04</td><td>Reduce human error in data transfer (copy/paste mistakes)</td><td>Zero data mismatch incidents per month</td></tr>
+    </tbody>
+  </table>
+
+  <div class="section-header" id="section-2">
+    <span class="section-number s2">2</span>
+    <h2 class="section-title">Scope</h2>
+  </div>
+  <h3>In Scope</h3>
+  <ul>
+    <li>Morning: Automated login and data download from ThaiBMA (ibond.thaibma.or.th)</li>
+    <li>Morning: Copy downloaded files to network share</li>
+    <li>Evening: Trigger Excel VBA macros on <code>power_automate_for_Afternoon.xlsm</code> and <code>Benchmark.xlsm</code></li>
+    <li>Evening: Send GPO performance update email via Outlook to risk and operations</li>
+    <li>Standalone: Send GPO benchmark email from Bloomberg Excel files</li>
+    <li>SQL: Queries for NAV, VaR, Holdings, Bloomberg MTM data (manual execution)</li>
+  </ul>
+  <h3>Out of Scope</h3>
+  <ul>
+    <li>Web dashboard or user interface</li>
+    <li>Real-time streaming data</li>
+    <li>Automated SQL query scheduling (currently manual)</li>
+    <li>Non-Windows operating systems</li>
+    <li>Any fund management or trading decision logic</li>
+  </ul>
+  <h3>Assumptions</h3>
+  <ul>
+    <li>Scripts run on a Windows machine with Office (Excel + Outlook) installed</li>
+    <li>Anaconda Python 3 is installed at <code>C:\ProgramData\anaconda3\</code></li>
+    <li>Network shares (<code>\\w2fsspho101.lhfund.net\FM-RI$\</code>) are mounted and accessible</li>
+    <li>ThaiBMA credentials remain valid and website structure does not change</li>
+    <li>Chrome browser is installed for Selenium</li>
+  </ul>
+
+  <div class="section-header" id="section-3">
+    <span class="section-number s3">3</span>
+    <h2 class="section-title">Stakeholders</h2>
+  </div>
+  <table>
+    <thead><tr><th>Stakeholder</th><th>Role</th><th>Interest</th><th>Communication</th></tr></thead>
+    <tbody>
+      <tr><td>Risk Team (<code>risk@lhfund.co.th</code>)</td><td>Primary Consumer</td><td>Receives daily GPO emails, uses bond index data for risk reporting</td><td>Email reports daily</td></tr>
+      <tr><td>Operations Team (<code>operation@lhfund.co.th</code>)</td><td>Secondary Consumer</td><td>Receives GPO update emails</td><td>Email reports daily</td></tr>
+      <tr><td>Risk Developer (Amornsiri)</td><td>Maintainer / Author</td><td>Owns scripts, maintains network paths and credentials</td><td>Direct code ownership</td></tr>
+      <tr><td>IT / Infrastructure</td><td>Dependency</td><td>Maintains network share, SQL Server access, Windows environment</td><td>On-demand support</td></tr>
+    </tbody>
+  </table>
+
+  <div class="section-header" id="section-4">
+    <span class="section-number s4">4</span>
+    <h2 class="section-title">AS-IS State &amp; Process Flow</h2>
+  </div>
+  <div class="mermaid">
+graph TD
+    A[Trading Day Start] --> B[Run Morning BAT]
+    B --> C[Run_morning_ThaiBMA.py]
+    C --> D[Selenium: Login ThaiBMA]
+    D --> E[Download Bond Indexes\nZRR, CorpBond, Composite, etc.]
+    E --> F[Copy to Network Share]
+    F --> G[Run_morning_ThaiBMA_part_2.py]
+    G --> H[Download additional indexes]
+    H --> I[Morning workflow complete]
+
+    J[After Market Close] --> K[Run Evening BAT]
+    K --> L[GPO.py]
+    L --> M[Run Excel Macro\nCreate_Afternoon]
+    M --> N[Run Excel Macro\nBenchmark evening]
+    N --> O[Send GPO Email\nvia Outlook]
+    O --> P[Evening workflow complete]
+  </div>
+  <h3>Pain Points (AS-IS)</h3>
+  <table>
+    <thead><tr><th>Pain Point</th><th>Impact</th><th>Priority</th></tr></thead>
+    <tbody>
+      <tr><td>No requirements.txt — dependencies undocumented</td><td>New developer cannot set up environment</td><td><span class="badge badge-red">High</span></td></tr>
+      <tr><td>Hardcoded network paths and Desktop credential paths</td><td>Breaks on any machine that isn't the original dev machine</td><td><span class="badge badge-red">High</span></td></tr>
+      <tr><td>No error alerting — script failures are silent</td><td>Missing data goes undetected until EOD</td><td><span class="badge badge-red">High</span></td></tr>
+      <tr><td>No test coverage</td><td>Regressions undetected; hard to refactor safely</td><td><span class="badge badge-yellow">Medium</span></td></tr>
+      <tr><td>Duplicate code between GPO.py and run_evening.py</td><td>Bug fixes must be applied in two places</td><td><span class="badge badge-yellow">Medium</span></td></tr>
+      <tr><td>Credentials stored in plaintext .env on Desktop</td><td>Security risk if machine is shared or compromised</td><td><span class="badge badge-red">High</span></td></tr>
+    </tbody>
+  </table>
+
+  <div class="section-header" id="section-5">
+    <span class="section-number s5">5</span>
+    <h2 class="section-title">Functional Requirements</h2>
+  </div>
+  <h3>REQ-MORNING — Morning Data Pipeline</h3>
+  <table>
+    <thead><tr><th>Req ID</th><th>Requirement</th><th>Priority</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>REQ-MOR-001</td><td>System SHALL log in to ThaiBMA (ibond.thaibma.or.th) using credentials from .env file</td><td><span class="badge badge-red">Must</span></td><td><span class="badge badge-green">Implemented</span></td></tr>
+      <tr><td>REQ-MOR-002</td><td>System SHALL download ZRR index, Short-term index, Bond index, MTM Corp index, Composite index, Corp ZRR index</td><td><span class="badge badge-red">Must</span></td><td><span class="badge badge-green">Implemented</span></td></tr>
+      <tr><td>REQ-MOR-003</td><td>System SHALL copy downloaded files to the risk network share within 5 minutes of download completion</td><td><span class="badge badge-red">Must</span></td><td><span class="badge badge-green">Implemented</span></td></tr>
+      <tr><td>REQ-MOR-004</td><td>System SHALL complete the full morning workflow before 08:50 AM on trading days</td><td><span class="badge badge-red">Must</span></td><td><span class="badge badge-yellow">Untested</span></td></tr>
+      <tr><td>REQ-MOR-005</td><td>System SHALL retry login up to 360 times (30 min) if ThaiBMA site is slow to load</td><td><span class="badge badge-blue">Should</span></td><td><span class="badge badge-green">Implemented</span></td></tr>
+      <tr><td>REQ-MOR-006</td><td>System SHALL alert the risk team (email or log) if any download fails</td><td><span class="badge badge-red">Must</span></td><td><span class="badge badge-red">Not implemented</span></td></tr>
+    </tbody>
+  </table>
+  <h3>REQ-EVENING — Evening Macro &amp; Reporting</h3>
+  <table>
+    <thead><tr><th>Req ID</th><th>Requirement</th><th>Priority</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>REQ-EVE-001</td><td>System SHALL open power_automate_for_Afternoon.xlsm and run VBA macro Create_Afternoon</td><td><span class="badge badge-red">Must</span></td><td><span class="badge badge-green">Implemented</span></td></tr>
+      <tr><td>REQ-EVE-002</td><td>System SHALL open Benchmark.xlsm and run VBA macro Module1.evening</td><td><span class="badge badge-red">Must</span></td><td><span class="badge badge-green">Implemented</span></td></tr>
+      <tr><td>REQ-EVE-003</td><td>System SHALL send an HTML-formatted GPO performance email to risk@lhfund.co.th and operation@lhfund.co.th</td><td><span class="badge badge-red">Must</span></td><td><span class="badge badge-green">Implemented</span></td></tr>
+      <tr><td>REQ-EVE-004</td><td>Email SHALL include GPO-FIXED and GPO-EQ last-row performance data as HTML tables</td><td><span class="badge badge-red">Must</span></td><td><span class="badge badge-green">Implemented</span></td></tr>
+      <tr><td>REQ-EVE-005</td><td>System SHALL wait for Excel macro to complete before closing workbook</td><td><span class="badge badge-red">Must</span></td><td><span class="badge badge-yellow">Partial (polling loop)</span></td></tr>
+    </tbody>
+  </table>
+
+  <div class="section-header" id="section-6">
+    <span class="section-number s6">6</span>
+    <h2 class="section-title">Non-Functional Requirements</h2>
+  </div>
+  <table>
+    <thead><tr><th>Category</th><th>Requirement</th><th>Priority</th></tr></thead>
+    <tbody>
+      <tr><td>Reliability</td><td>Morning script must succeed on ≥99% of trading days</td><td><span class="badge badge-red">Must</span></td></tr>
+      <tr><td>Maintainability</td><td>requirements.txt must list all Python dependencies with pinned versions</td><td><span class="badge badge-red">Must</span></td></tr>
+      <tr><td>Security</td><td>Credentials must never be committed to Git; .gitignore must exclude all .env files</td><td><span class="badge badge-red">Must</span></td></tr>
+      <tr><td>Observability</td><td>Each script must log start time, completion time, and any errors to a log file</td><td><span class="badge badge-blue">Should</span></td></tr>
+      <tr><td>Portability</td><td>Setup guide must allow any Windows + Office machine to run scripts within 30 min</td><td><span class="badge badge-blue">Should</span></td></tr>
+      <tr><td>Performance</td><td>Full morning pipeline must complete within 20 minutes</td><td><span class="badge badge-blue">Should</span></td></tr>
+    </tbody>
+  </table>
+
+  <div class="section-header" id="section-7">
+    <span class="section-number s7">7</span>
+    <h2 class="section-title">Data Requirements</h2>
+  </div>
+  <h3>External Data Sources</h3>
+  <table>
+    <thead><tr><th>Source</th><th>Data</th><th>Format</th><th>Frequency</th></tr></thead>
+    <tbody>
+      <tr><td>ThaiBMA (ibond.thaibma.or.th)</td><td>ZRR index, Bond index, Corp index, Composite index, Short-term index</td><td>Excel (.xlsx)</td><td>Daily (morning)</td></tr>
+      <tr><td>Bloomberg network share (<code>P:\Bloomberg\</code>)</td><td>GPO-FIXED, GPO-EQ management fee Excel files</td><td>Excel (.xls)</td><td>Daily (evening)</td></tr>
+      <tr><td>Morningstar Benchmark (<code>\\172.16.21.100\Risk$\</code>)</td><td>Benchmark index data</td><td>Excel (.xls)</td><td>Daily (morning)</td></tr>
+    </tbody>
+  </table>
+  <h3>Internal SQL Databases</h3>
+  <table>
+    <thead><tr><th>Database</th><th>Table/View</th><th>Data</th></tr></thead>
+    <tbody>
+      <tr><td>LHF_SYSTEM.DBO</td><td>LHF_BBG_DL_MTM_FX_EQ_MORNING</td><td>Bloomberg MTM FX and equity prices (PRICECODE, PX_LAST, MTMDATE)</td></tr>
+      <tr><td>LHF_PERFORMANCE.dbo</td><td>ViewFundNavAll</td><td>Fund NAV per unit (FundCode, NAVDate, NAVPerUnitDiv, FundType, DailyReturn)</td></tr>
+      <tr><td>INV_LHF.INVEST</td><td>HOLDING</td><td>Daily portfolio holdings (PORTFOLIOCODE, as-of yesterday)</td></tr>
+      <tr><td>FIN_REG_LHF.dbo</td><td>holiday</td><td>Thai market holiday calendar (HolidayDate, CalendarID)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="section-header" id="section-8">
+    <span class="section-number s8">8</span>
+    <h2 class="section-title">Open Issues</h2>
+  </div>
+  <table>
+    <thead><tr><th>ID</th><th>Issue</th><th>Impact</th><th>Owner</th><th>Priority</th></tr></thead>
+    <tbody>
+      <tr><td>OI-001</td><td>No requirements.txt — dependencies not documented</td><td>Cannot onboard new developer</td><td>Dev Team</td><td><span class="badge badge-red">High</span></td></tr>
+      <tr><td>OI-002</td><td>No failure alerting — silent failures go undetected</td><td>Missing data discovered too late</td><td>Dev Team</td><td><span class="badge badge-red">High</span></td></tr>
+      <tr><td>OI-003</td><td>Hardcoded credential path (Desktop/PP.env)</td><td>Breaks on any non-original machine</td><td>Dev Team</td><td><span class="badge badge-red">High</span></td></tr>
+      <tr><td>OI-004</td><td>GPO.py and run_evening.py are near-duplicates</td><td>Bugs fixed in one may not be fixed in the other</td><td>Dev Team</td><td><span class="badge badge-yellow">Medium</span></td></tr>
+      <tr><td>OI-005</td><td>No GitHub Actions CI configured</td><td>No automated lint or test on push</td><td>Dev Team</td><td><span class="badge badge-yellow">Medium</span></td></tr>
+      <tr><td>OI-006</td><td>ThaiBMA website XPath selectors may break if site redesigns</td><td>Morning workflow fails silently</td><td>Dev Team</td><td><span class="badge badge-yellow">Medium</span></td></tr>
+    </tbody>
+  </table>
+
+</main>
+
+<script>
+  function toggleTheme() {
+    var html = document.documentElement;
+    var isDark = html.getAttribute('data-theme') === 'dark';
+    if (isDark) { html.removeAttribute('data-theme'); localStorage.setItem('docportal-theme', 'light'); document.getElementById('themeIcon').innerHTML = '&#9788;'; }
+    else { html.setAttribute('data-theme', 'dark'); localStorage.setItem('docportal-theme', 'dark'); document.getElementById('themeIcon').innerHTML = '&#9790;'; }
+  }
+  (function() { var saved = localStorage.getItem('docportal-theme'); if (saved === 'dark') { document.documentElement.setAttribute('data-theme', 'dark'); document.getElementById('themeIcon').innerHTML = '&#9790;'; } })();
+  const sections = document.querySelectorAll('.section-header[id]');
+  const tocLinks = document.querySelectorAll('.toc-link');
+  const content = document.querySelector('.doc-content');
+  content.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(s => { if (content.scrollTop >= s.offsetTop - content.offsetTop - 100) current = s.id; });
+    tocLinks.forEach(l => { l.classList.remove('active'); if (l.getAttribute('href') === '#' + current) l.classList.add('active'); });
+  });
+  tocLinks.forEach(link => { link.addEventListener('click', e => { e.preventDefault(); const t = document.querySelector(link.getAttribute('href')); if (t) content.scrollTo({ top: t.offsetTop - content.offsetTop - 20, behavior: 'smooth' }); }); });
+</script>
+</body>
+</html>

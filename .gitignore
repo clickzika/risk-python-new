@@ -1,0 +1,42 @@
+# Credentials — NEVER commit these
+*.env
+.env
+PP.env
+two.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Excel files (large binary, sensitive data)
+*.xlsm
+*.xlsx
+*.xls
+
+# Log and data files
+Logfile_forevening/
+logfile_formorning/
+*.zip
+*.tmp
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.user
