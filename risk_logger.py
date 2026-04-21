@@ -1,7 +1,33 @@
+import functools
 import logging
 import os
 import sys
+import time
 from datetime import date, datetime
+
+
+def retry(times=3, delay=1.0, exceptions=(Exception,)):
+    """Decorator: retry a function up to `times` attempts with exponential backoff.
+
+    Each retry waits delay * attempt seconds. Raises the last exception if all
+    attempts fail. Use on any I/O-bound function that can transiently fail.
+    """
+    def decorator(fn):
+        @functools.wraps(fn)
+        def wrapper(*args, **kwargs):
+            logger = logging.getLogger("retry")
+            for attempt in range(1, times + 1):
+                try:
+                    return fn(*args, **kwargs)
+                except exceptions as e:
+                    if attempt == times:
+                        logger.error(f"{fn.__name__} failed after {times} attempts: {e}")
+                        raise
+                    wait = delay * attempt
+                    logger.warning(f"{fn.__name__} attempt {attempt}/{times} failed: {e} — retrying in {wait:.1f}s")
+                    time.sleep(wait)
+        return wrapper
+    return decorator
 
 
 def send_failure_alert(script_name: str, error_msg: str) -> None:

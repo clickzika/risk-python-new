@@ -6,7 +6,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.edge.options import Options
 from webdriver_manager.microsoft import EdgeChromiumDriverManager
 from dotenv import load_dotenv
-from risk_logger import get_logger, send_failure_alert, is_holiday
+from risk_logger import get_logger, send_failure_alert, is_holiday, retry
 import win32com.client
 import sys
 import os
@@ -34,27 +34,16 @@ download_dir = MORNING_DL_DIR
 
 
 def copy_latest_file(dl_path, des_path, _from, _to):
-    latest_file = None
-    for i in range(360):
-        try:
-            list_of_files = glob.glob(f'{dl_path}\\{_from}*.xlsx')
-            if not list_of_files:
-                raise FileNotFoundError(f"No files found with prefix '{_from}' in directory '{dl_path}'")
-            latest_file = max(list_of_files, key=os.path.getctime)
-            break
-        except Exception as e:
-            print(f"Attempt {i+1}: Error occurred - {e}")
-            time.sleep(0.5)
+    @retry(times=120, delay=0.5, exceptions=(FileNotFoundError, ValueError))
+    def _find_and_copy():
+        files = glob.glob(f'{dl_path}\\{_from}*.xlsx')
+        if not files:
+            raise FileNotFoundError(f"No files with prefix '{_from}' in '{dl_path}'")
+        latest_file = max(files, key=os.path.getctime)
+        shutil.copy(latest_file, f'{des_path}\\{_to}.xlsx')
+        print(f"Copied {latest_file} → {des_path}\\{_to}.xlsx")
 
-    if latest_file:
-        destination_path = f'{des_path}\\{_to}.xlsx'
-        try:
-            shutil.copy(latest_file, destination_path)
-            print(f"Copied {latest_file} to {destination_path}")
-        except Exception as e:
-            print(f"Failed to copy {latest_file} to {destination_path}: {e}")
-    else:
-        print(f"Failed to find or copy the latest file with prefix '{_from}' after 180 seconds")
+    _find_and_copy()
 
 
 def run_excel_macro(file_path, macro_name):
@@ -91,15 +80,14 @@ def main():
         driver.get(THAIBMA_LOGIN)
         time.sleep(4)
 
-        for i in range(360):
-            try:
-                driver.find_element(By.XPATH, "/html/body/div/div/div/main/form/div[1]/input").send_keys(f"{username}")
-                driver.find_element(By.XPATH, "/html/body/div/div/div/main/form/div[2]/input").send_keys(f"{password}")
-                driver.find_element(By.XPATH, "/html/body/div/div/div/main/form/button").click()
-                time.sleep(7.5)
-                break
-            except Exception:
-                time.sleep(1.5)
+        @retry(times=10, delay=2.0)
+        def _login():
+            driver.find_element(By.XPATH, "/html/body/div/div/div/main/form/div[1]/input").send_keys(f"{username}")
+            driver.find_element(By.XPATH, "/html/body/div/div/div/main/form/div[2]/input").send_keys(f"{password}")
+            driver.find_element(By.XPATH, "/html/body/div/div/div/main/form/button").click()
+            time.sleep(7.5)
+
+        _login()
         log.info("ThaiBMA login successful")
 
         driver.get(THAIBMA_ZRR)
