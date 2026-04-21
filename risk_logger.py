@@ -1,4 +1,5 @@
 import functools
+import json
 import logging
 import os
 import sys
@@ -78,6 +79,25 @@ def is_holiday(check_date: date = None) -> bool:
             f"Holiday check failed ({e}) — assuming not a holiday"
         )
         return False
+
+
+def write_status(script_name: str, status: str, detail: str = "") -> None:
+    """Write a JSON status file for the monitoring dashboard.
+
+    status: "success" | "failed" | "skipped"
+    detail: last file copied, email sent, or error message
+    """
+    status_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "memory", "status")
+    os.makedirs(status_dir, exist_ok=True)
+    payload = {
+        "script": script_name,
+        "status": status,
+        "detail": detail,
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+    }
+    path = os.path.join(status_dir, f"{script_name}.json")
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=2)
 
 
 def get_logger(script_name: str) -> logging.Logger:

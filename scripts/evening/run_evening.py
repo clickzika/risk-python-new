@@ -3,7 +3,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.edge.service import Service
 from webdriver_manager.microsoft import EdgeChromiumDriverManager
-from risk_logger import get_logger, send_failure_alert, is_holiday, retry
+from risk_logger import get_logger, send_failure_alert, is_holiday, retry, write_status
 import sys
 import time
 import os
@@ -192,6 +192,7 @@ def new_set():
 def main():
     if is_holiday():
         log.info("Today is a public holiday — skipping evening GPO run.")
+        write_status("run_evening", "skipped", "Public holiday")
         return
     log.info("=== GPO evening workflow started ===")
     log.info(f"Loaded credentials from: {env_path}")
@@ -276,6 +277,7 @@ def main():
     newmail.Send()
     log.info("GPO update email sent successfully")
     log.info("=== GPO evening workflow completed ===")
+    write_status("run_evening", "success", f"Email sent to {EMAIL_RECIPIENTS}")
 
 
 if __name__ == "__main__":
@@ -283,5 +285,6 @@ if __name__ == "__main__":
         main()
     except Exception as e:
         log.critical(f"Script failed: {e}", exc_info=True)
+        write_status("run_evening", "failed", str(e))
         send_failure_alert("GPO", str(e))
         sys.exit(1)

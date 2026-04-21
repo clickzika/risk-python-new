@@ -56,8 +56,23 @@ if %ERRORLEVEL% NEQ 0 (
 )
 echo [OK] RiskGPOEmail registered  — runs Mon-Fri at 17:15
 
+:: Dashboard — Mon-Fri at 17:30 (after evening + GPO email)
+schtasks /create ^
+  /tn "LHFund\RiskDashboard" ^
+  /tr "%PROJECT%\runners\run_dashboard.bat" ^
+  /sc WEEKLY /d MON,TUE,WED,THU,FRI ^
+  /st 17:30 ^
+  /rl HIGHEST ^
+  /f
+if %ERRORLEVEL% NEQ 0 (
+    echo [ERROR] Failed to register RiskDashboard task.
+    exit /b %ERRORLEVEL%
+)
+echo [OK] RiskDashboard registered — runs Mon-Fri at 17:30
+
 echo.
 echo Done. Verify in Task Scheduler under LHFund\.
 echo To run manually: schtasks /run /tn "LHFund\RiskMorning"
 echo                  schtasks /run /tn "LHFund\RiskEvening"
 echo                  schtasks /run /tn "LHFund\RiskGPOEmail"
+echo                  schtasks /run /tn "LHFund\RiskDashboard"

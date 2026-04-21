@@ -2,8 +2,10 @@
 *.env
 scripts/.env
 
-# Logs (auto-generated at runtime)
+# Logs and generated runtime files
 logs/
+memory/status/
+docs/dashboard.html
 
 # Python
 __pycache__/
