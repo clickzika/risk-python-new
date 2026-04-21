@@ -3,7 +3,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.edge.service import Service
 from webdriver_manager.microsoft import EdgeChromiumDriverManager
-from risk_logger import get_logger, send_failure_alert, is_holiday
+from risk_logger import get_logger, send_failure_alert, is_holiday, retry
 import sys
 import time
 import os
@@ -117,10 +117,15 @@ def doallTBMA(yesterday):
     try:
         driver.get(THAIBMA_LOGIN_ST)
         time.sleep(5)
-        driver.find_element(By.XPATH, "/html/body/div/div/div/main/form/div[1]/input").send_keys(username)
-        driver.find_element(By.XPATH, "/html/body/div/div/div/main/form/div[2]/input").send_keys(password)
-        driver.find_element(By.XPATH, "/html/body/div/div/div/main/form/button").click()
-        time.sleep(5)
+
+        @retry(times=10, delay=2.0)
+        def _login():
+            driver.find_element(By.XPATH, "/html/body/div/div/div/main/form/div[1]/input").send_keys(username)
+            driver.find_element(By.XPATH, "/html/body/div/div/div/main/form/div[2]/input").send_keys(password)
+            driver.find_element(By.XPATH, "/html/body/div/div/div/main/form/button").click()
+            time.sleep(5)
+
+        _login()
 
         LoadFile(driver, THAIBMA_LOGIN_ST, xpath1, xpathdate1, 'ST_GBI', yesterday)
         time.sleep(1)
@@ -135,25 +140,16 @@ def doallTBMA(yesterday):
 
 
 def Transfer(_from, _to):
-    for i in range(360):
-        try:
-            list_of_files = glob.glob(f'{EVENING_DL_DIR}\\{_from}*.xlsx')
-            print(f'Attempt {i+1}: Found files: {list_of_files}')
-            if not list_of_files:
-                raise FileNotFoundError(f"No files matched pattern: {EVENING_DL_DIR}\\{_from}*.xlsx")
-            latest_file = max(list_of_files, key=os.path.getctime)
-            print(f'Latest file: {latest_file}')
-            break
-        except Exception as e:
-            print(f'Error: {e}')
-            time.sleep(0.5)
-    else:
-        raise FileNotFoundError("No files found after multiple attempts.")
+    @retry(times=120, delay=0.5, exceptions=(FileNotFoundError, ValueError))
+    def _find_and_copy():
+        files = glob.glob(f'{EVENING_DL_DIR}\\{_from}*.xlsx')
+        if not files:
+            raise FileNotFoundError(f"No files matched pattern: {EVENING_DL_DIR}\\{_from}*.xlsx")
+        latest_file = max(files, key=os.path.getctime)
+        shutil.copy(latest_file, f'{EVENING_DATA_DIR}\\{_to}.xlsx')
+        print(f'Copied {latest_file} → {EVENING_DATA_DIR}\\{_to}.xlsx')
 
-    destination_path = f'{EVENING_DATA_DIR}\\{_to}.xlsx'
-    print(f'Copying file to: {destination_path}')
-    shutil.copy(latest_file, destination_path)
-    print('File copied successfully.')
+    _find_and_copy()
 
 
 def run_excel_macro(file_path, macro_name):
