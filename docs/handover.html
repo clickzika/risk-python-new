@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LHFund Risk Automation — Handover Document</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #0f0f23;
+    color: #eeeeee;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    background: #1a1a2e;
+    border-bottom: 2px solid #e94560;
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  header .project { font-size: 0.85rem; color: #94a3b8; }
+  header h1 { font-size: 1.25rem; color: #e94560; font-weight: 700; margin-top: 2px; }
+  .badge-row { display: flex; gap: 8px; align-items: center; }
+  .status-badge {
+    background: #10b981; color: #fff;
+    font-size: 0.7rem; font-weight: 700;
+    padding: 3px 12px; border-radius: 20px; letter-spacing: 0.5px;
+  }
+  .version { font-size: 0.75rem; color: #64748b; }
+
+  /* ── Layout ── */
+  .layout { display: flex; flex: 1; }
+
+  /* ── Sidebar ── */
+  aside {
+    width: 280px;
+    min-width: 280px;
+    background: #16213e;
+    padding: 28px 0;
+    position: sticky;
+    top: 57px;
+    height: calc(100vh - 57px);
+    overflow-y: auto;
+  }
+  aside .toc-title {
+    font-size: 0.7rem; font-weight: 700; letter-spacing: 1.5px;
+    color: #64748b; text-transform: uppercase;
+    padding: 0 24px 12px;
+  }
+  aside a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 24px;
+    font-size: 0.82rem; color: #94a3b8;
+    text-decoration: none;
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+  }
+  aside a:hover { color: #eeeeee; background: #1e1e3a; border-left-color: #e94560; }
+  aside a .num {
+    font-size: 0.7rem; font-weight: 700;
+    width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .doc-info {
+    margin: 24px 16px 0;
+    background: #1e1e3a;
+    border-radius: 8px;
+    padding: 14px;
+    font-size: 0.75rem;
+    color: #64748b;
+    line-height: 1.8;
+  }
+  .doc-info strong { color: #94a3b8; }
+
+  /* ── Content ── */
+  main { flex: 1; padding: 36px 48px; max-width: 900px; }
+
+  section { margin-bottom: 52px; }
+
+  h2 {
+    font-size: 1.2rem; font-weight: 700;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #2a2a4a;
+    margin-bottom: 20px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  h2 .sec-num {
+    font-size: 0.75rem; font-weight: 700;
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  h3 { font-size: 0.95rem; font-weight: 600; color: #cbd5e1; margin: 20px 0 10px; }
+
+  p { font-size: 0.875rem; line-height: 1.75; color: #cbd5e1; margin-bottom: 12px; }
+
+  /* ── Tables ── */
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.82rem; }
+  thead tr { background: #1a1a2e; border-bottom: 2px solid #e94560; }
+  th { padding: 10px 14px; text-align: left; color: #94a3b8; font-weight: 600; letter-spacing: 0.3px; }
+  td { padding: 9px 14px; border-bottom: 1px solid #1e1e3a; color: #cbd5e1; vertical-align: top; }
+  tr:nth-child(even) td { background: #13132a; }
+  tr:hover td { background: #1e1e3a; }
+
+  /* ── Code ── */
+  code {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    background: #13132a; color: #ff6b81;
+    padding: 1px 7px; border-radius: 4px; font-size: 0.8rem;
+  }
+  pre {
+    background: #13132a; border: 1px solid #2a2a4a; border-radius: 8px;
+    padding: 16px 20px; overflow-x: auto; margin: 14px 0;
+  }
+  pre code { background: none; color: #a5f3fc; padding: 0; font-size: 0.8rem; line-height: 1.7; }
+
+  /* ── Cards ── */
+  .card {
+    background: #1e1e3a; border: 1px solid #2a2a4a;
+    border-radius: 10px; padding: 18px 22px; margin: 12px 0;
+  }
+  .card.warn  { border-left: 4px solid #f59e0b; }
+  .card.info  { border-left: 4px solid #3b82f6; }
+  .card.danger { border-left: 4px solid #ef4444; }
+  .card.success { border-left: 4px solid #10b981; }
+  .card-title { font-size: 0.82rem; font-weight: 700; color: #eeeeee; margin-bottom: 6px; }
+  .card p { margin-bottom: 0; font-size: 0.82rem; }
+
+  /* ── Schedule timeline ── */
+  .timeline { list-style: none; padding: 0; margin: 16px 0; }
+  .timeline li {
+    display: flex; gap: 16px; align-items: flex-start;
+    padding: 10px 0; border-bottom: 1px solid #1e1e3a;
+  }
+  .time-pill {
+    background: #1a1a2e; border: 1px solid #3b82f6;
+    color: #3b82f6; font-size: 0.75rem; font-weight: 700;
+    padding: 3px 10px; border-radius: 20px; white-space: nowrap;
+    min-width: 70px; text-align: center;
+  }
+  .time-desc { font-size: 0.83rem; color: #cbd5e1; line-height: 1.6; }
+  .time-desc strong { color: #eeeeee; }
+
+  /* ── Steps ── */
+  ol.steps { padding-left: 0; counter-reset: step; list-style: none; }
+  ol.steps li {
+    counter-increment: step;
+    display: flex; gap: 14px; margin-bottom: 12px; align-items: flex-start;
+  }
+  ol.steps li::before {
+    content: counter(step);
+    background: #e94560; color: #fff;
+    font-size: 0.72rem; font-weight: 700;
+    min-width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin-top: 1px; flex-shrink: 0;
+  }
+  ol.steps li p { margin: 0; font-size: 0.83rem; }
+
+  footer {
+    background: #1a1a2e; border-top: 1px solid #2a2a4a;
+    text-align: center; padding: 14px;
+    font-size: 0.75rem; color: #64748b;
+  }
+
+  @media print {
+    body { background: #fff; color: #000; }
+    header { background: #f1f5f9; position: static; }
+    aside { display: none; }
+    main { max-width: 100%; padding: 24px; }
+    h2 { border-color: #e2e8f0; color: #000; }
+    td, th { color: #000; border-color: #e2e8f0; }
+    .card { background: #f8fafc; border-color: #e2e8f0; }
+    pre { background: #f8fafc; }
+    code { background: #f1f5f9; color: #e11d48; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="project">LH Fund Management — Risk Team</div>
+    <h1>Risk Automation — Handover Document</h1>
+  </div>
+  <div class="badge-row">
+    <span class="status-badge">APPROVED</span>
+    <span class="version">v1.0 &nbsp;·&nbsp; 2026-04-21</span>
+  </div>
+</header>
+
+<div class="layout">
+
+  <aside>
+    <div class="toc-title">Contents</div>
+    <a href="#s1"><span class="num" style="background:#3b82f6;color:#fff">1</span>Overview</a>
+    <a href="#s2"><span class="num" style="background:#8b5cf6;color:#fff">2</span>Daily Schedule</a>
+    <a href="#s3"><span class="num" style="background:#f59e0b;color:#fff">3</span>First-Time Setup</a>
+    <a href="#s4"><span class="num" style="background:#10b981;color:#fff">4</span>File & Folder Map</a>
+    <a href="#s5"><span class="num" style="background:#ef4444;color:#fff">5</span>Troubleshooting</a>
+    <a href="#s6"><span class="num" style="background:#f97316;color:#fff">6</span>Monitoring Dashboard</a>
+    <a href="#s7"><span class="num" style="background:#06b6d4;color:#fff">7</span>Running Manually</a>
+    <a href="#s8"><span class="num" style="background:#ec4899;color:#fff">8</span>Changing Config</a>
+    <a href="#s9"><span class="num" style="background:#6366f1;color:#fff">9</span>Contacts</a>
+    <a href="#s10"><span class="num" style="background:#14b8a6;color:#fff">10</span>Known Limitations</a>
+
+    <div class="doc-info">
+      <strong>Author:</strong> Risk Team<br>
+      <strong>Date:</strong> 2026-04-21<br>
+      <strong>Repo:</strong> risk-python<br>
+      <strong>Branch:</strong> main<br>
+      <strong>Status:</strong> Approved
+    </div>
+  </aside>
+
+  <main>
+
+    <!-- 1. Overview -->
+    <section id="s1">
+      <h2><span class="sec-num" style="background:#3b82f6">1</span>Overview</h2>
+      <p>
+        <strong>risk-python</strong> is a Windows automation suite that runs the Risk team's daily
+        morning and evening data workflows without manual intervention. It scrapes bond index data
+        from ThaiBMA, runs Excel VBA macros, queries SQL Server for NAV/Holdings/VaR data, and
+        sends email reports via Outlook — all triggered automatically by Windows Task Scheduler.
+      </p>
+      <div class="card info">
+        <div class="card-title">📦 Repository</div>
+        <p><code>https://github.com/clickzika/risk-python-new</code> — branch <code>main</code></p>
+      </div>
+      <div class="card warn">
+        <div class="card-title">⚠️ Windows Only</div>
+        <p>All scripts require Windows + Microsoft Office (Outlook + Excel) + Anaconda Python. They cannot run on Linux or macOS.</p>
+      </div>
+    </section>
+
+    <!-- 2. Daily Schedule -->
+    <section id="s2">
+      <h2><span class="sec-num" style="background:#8b5cf6">2</span>Daily Schedule</h2>
+      <p>All tasks run Monday–Friday. Tasks are skipped automatically on Thai public holidays.</p>
+      <ul class="timeline">
+        <li>
+          <span class="time-pill">07:30</span>
+          <div class="time-desc">
+            <strong>Morning Part 1</strong> — ThaiBMA login, download Morningstar Benchmark + MTMGov + CP + MTMCorp + ESG indexes. Copies files to network share and runs <code>UpdateData</code> macro.<br>
+            <em>Runner: runners\run_morning.bat → scripts\morning\run_morning_part1.py</em>
+          </div>
+        </li>
+        <li>
+          <span class="time-pill">07:30</span>
+          <div class="time-desc">
+            <strong>Morning Part 2</strong> — Downloads ZRR, Short-term, Bond, Composite, Corp ZRR indexes. Runs <code>UpdateData2</code> macro.<br>
+            <em>Runner: runners\run_morning.bat → scripts\morning\run_morning_part2.py</em>
+          </div>
+        </li>
+        <li>
+          <span class="time-pill">17:00</span>
+          <div class="time-desc">
+            <strong>Evening Workflow</strong> — Runs <code>Create_Afternoon</code> VBA macro, downloads evening ThaiBMA indexes, runs <code>new_finish_set</code> macro, sends GPO update email to risk + operation.<br>
+            <em>Runner: runners\run_evening.bat → scripts\evening\run_evening.py</em>
+          </div>
+        </li>
+        <li>
+          <span class="time-pill">17:15</span>
+          <div class="time-desc">
+            <strong>GPO Email</strong> — Standalone: reads Bloomberg GPO-FIXED and GPO-EQ Excel files, formats HTML table, sends via Outlook.<br>
+            <em>Runner: runners\run_gpo_email.bat → scripts\evening\send_gpo_email.py</em>
+          </div>
+        </li>
+        <li>
+          <span class="time-pill">17:30</span>
+          <div class="time-desc">
+            <strong>Dashboard Refresh</strong> — Regenerates <code>docs\dashboard.html</code> from latest run status files.<br>
+            <em>Runner: runners\run_dashboard.bat → scripts\generate_dashboard.py</em>
+          </div>
+        </li>
+        <li>
+          <span class="time-pill">18:00</span>
+          <div class="time-desc">
+            <strong>SQL Queries</strong> — Runs NAV (MF/PF/PVD), daily holdings, VaR, and Bloomberg MTM queries. Saves dated Excel files to <code>\\w2fsspho101.lhfund.net\FM-RI$\risk\Amornsiri\SQL_Output\</code>.<br>
+            <em>Runner: runners\run_sql_queries.bat → scripts\run_sql_queries.py</em>
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <!-- 3. First-Time Setup -->
+    <section id="s3">
+      <h2><span class="sec-num" style="background:#f59e0b">3</span>First-Time Setup</h2>
+      <p>Perform these steps once on a new workstation before the scheduled tasks will work.</p>
+
+      <h3>3.1 — Clone and install</h3>
+      <pre><code>git clone https://github.com/clickzika/risk-python-new.git
+cd risk-python-new
+pip install -r requirements.txt</code></pre>
+
+      <h3>3.2 — Create credentials file</h3>
+      <pre><code>copy scripts\.env.example scripts\.env
+:: Then edit scripts\.env and fill in ThaiBMA username and password</code></pre>
+
+      <h3>3.3 — Set SQL Server hostname</h3>
+      <p>Open <code>scripts\config.py</code> and replace:</p>
+      <pre><code>DB_MAIN_SERVER = r'YOUR_MAIN_SQL_SERVER'</code></pre>
+      <p>with the actual SQL Server hostname (e.g. <code>r'192.168.1.10\SQLEXPRESS'</code>).</p>
+
+      <h3>3.4 — Register scheduled tasks</h3>
+      <p>Right-click <code>runners\setup_scheduler.bat</code> → <strong>Run as administrator</strong>.</p>
+      <p>This registers 5 tasks under <code>LHFund\</code> in Windows Task Scheduler:</p>
+      <table>
+        <thead><tr><th>Task Name</th><th>Time</th></tr></thead>
+        <tbody>
+          <tr><td>LHFund\RiskMorning</td><td>Mon–Fri 07:30</td></tr>
+          <tr><td>LHFund\RiskEvening</td><td>Mon–Fri 17:00</td></tr>
+          <tr><td>LHFund\RiskGPOEmail</td><td>Mon–Fri 17:15</td></tr>
+          <tr><td>LHFund\RiskDashboard</td><td>Mon–Fri 17:30</td></tr>
+          <tr><td>LHFund\RiskSQLQueries</td><td>Mon–Fri 18:00</td></tr>
+        </tbody>
+      </table>
+
+      <div class="card warn">
+        <div class="card-title">⚠️ Workstation must stay on</div>
+        <p>The machine running these tasks must not be shut down or logged off before 18:00. Tasks run under the logged-in user session and require Outlook and Excel to be available.</p>
+      </div>
+    </section>
+
+    <!-- 4. File & Folder Map -->
+    <section id="s4">
+      <h2><span class="sec-num" style="background:#10b981">4</span>File &amp; Folder Map</h2>
+      <table>
+        <thead><tr><th>Path</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td><code>scripts\morning\run_morning_part1.py</code></td><td>ThaiBMA morning scrape Part 1</td></tr>
+          <tr><td><code>scripts\morning\run_morning_part2.py</code></td><td>ThaiBMA morning scrape Part 2</td></tr>
+          <tr><td><code>scripts\evening\run_evening.py</code></td><td>Evening VBA + GPO workflow</td></tr>
+          <tr><td><code>scripts\evening\send_gpo_email.py</code></td><td>Standalone GPO email</td></tr>
+          <tr><td><code>scripts\run_sql_queries.py</code></td><td>Daily SQL query runner</td></tr>
+          <tr><td><code>scripts\generate_dashboard.py</code></td><td>Dashboard HTML generator</td></tr>
+          <tr><td><code>scripts\config.py</code></td><td>All paths, URLs, macro names, DB config</td></tr>
+          <tr><td><code>scripts\.env</code></td><td>ThaiBMA credentials (never committed)</td></tr>
+          <tr><td><code>risk_logger.py</code></td><td>Shared logging, retry, alerts, status</td></tr>
+          <tr><td><code>runners\*.bat</code></td><td>Entry points called by Task Scheduler</td></tr>
+          <tr><td><code>logs\</code></td><td>Runtime log files (auto-created, auto-purged after 30 days)</td></tr>
+          <tr><td><code>memory\status\</code></td><td>Per-script JSON status files for dashboard</td></tr>
+          <tr><td><code>docs\dashboard.html</code></td><td>Monitoring dashboard (open in browser)</td></tr>
+          <tr><td><code>sql\</code></td><td>SQL query files (nav/, holdings/, var/, bloomberg/)</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Network shares</h3>
+      <table>
+        <thead><tr><th>Share</th><th>Used by</th></tr></thead>
+        <tbody>
+          <tr><td><code>\\w2fsspho101.lhfund.net\FM-RI$\risk\</code></td><td>All scripts — primary data share</td></tr>
+          <tr><td><code>\\172.16.21.100\Risk$\Morningstar Benchmark</code></td><td>Morning Part 1 — Morningstar source</td></tr>
+          <tr><td><code>P:\Bloomberg\Management Fee for PVD\</code></td><td>Evening — Bloomberg GPO files</td></tr>
+          <tr><td><code>P:\###RISK###\SET TRI\</code></td><td>Evening — SET TRI files</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 5. Troubleshooting -->
+    <section id="s5">
+      <h2><span class="sec-num" style="background:#ef4444">5</span>Troubleshooting</h2>
+
+      <h3>Where to look first</h3>
+      <ol class="steps">
+        <li><p>Open <code>docs\dashboard.html</code> in a browser — the red card tells you which script failed.</p></li>
+        <li><p>Open <code>logs\{script_name}_YYYYMMDD.log</code> — the last ERROR or CRITICAL line contains the full exception.</p></li>
+        <li><p>Check your email — a failure alert is sent to <code>risk@lhfund.co.th</code> automatically.</p></li>
+      </ol>
+
+      <h3>Common issues</h3>
+      <table>
+        <thead><tr><th>Symptom</th><th>Cause</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>ThaiBMA login fails after 10 retries</td>
+            <td>Wrong credentials or ThaiBMA site is down</td>
+            <td>Check <code>scripts\.env</code> has correct <code>user</code> and <code>pass</code>. Try logging in manually at ibond.thaibma.or.th</td>
+          </tr>
+          <tr>
+            <td><code>FileNotFoundError</code> on network share</td>
+            <td>VPN not connected or share unavailable</td>
+            <td>Connect to VPN / check <code>\\w2fsspho101.lhfund.net</code> is accessible in File Explorer</td>
+          </tr>
+          <tr>
+            <td>Edge WebDriver version mismatch</td>
+            <td>Edge browser was updated but ChromeDriver is stale</td>
+            <td>Run <code>pip install --upgrade webdriver-manager</code> — it auto-downloads the matching driver</td>
+          </tr>
+          <tr>
+            <td>Excel macro error / COM exception</td>
+            <td>Excel file is open or locked by another user</td>
+            <td>Close the relevant <code>.xlsm</code> file, then re-run manually</td>
+          </tr>
+          <tr>
+            <td>Outlook <code>COMException</code></td>
+            <td>Outlook is not running or not the default mail client</td>
+            <td>Open Outlook manually and ensure it is signed in, then re-run</td>
+          </tr>
+          <tr>
+            <td>SQL query fails with login error</td>
+            <td>Windows auth — running user has no DB access</td>
+            <td>Ask DBA to grant <code>db_datareader</code> to the task scheduler service account</td>
+          </tr>
+          <tr>
+            <td>Script skips on a non-holiday</td>
+            <td>Holiday DB query failed and defaulted to "not holiday"…or date is wrong in holiday table</td>
+            <td>Check <code>FIN_REG_LHF.dbo.holiday</code> table for the date. Check connectivity to <code>192.168.102.7\DB2008</code></td>
+          </tr>
+          <tr>
+            <td>Task Scheduler shows "Last Run Result: 0x1"</td>
+            <td>Script exited with non-zero code (Python exception)</td>
+            <td>Open the corresponding log file in <code>logs\</code> and look for CRITICAL</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="card danger">
+        <div class="card-title">🚨 If morning data is missing</div>
+        <p>Run <code>schtasks /run /tn "LHFund\RiskMorning"</code> from an Administrator command prompt to trigger the morning job manually. Files will be copied to the network share as normal.</p>
+      </div>
+    </section>
+
+    <!-- 6. Monitoring Dashboard -->
+    <section id="s6">
+      <h2><span class="sec-num" style="background:#f97316">6</span>Monitoring Dashboard</h2>
+      <p>
+        Open <code>docs\dashboard.html</code> in any browser. It shows a card per script with
+        last run status (✅ SUCCESS / ❌ FAILED / ⏭ SKIPPED), timestamp, and detail
+        (last file copied or error message). The page auto-refreshes every 5 minutes.
+      </p>
+      <p>
+        The dashboard is regenerated daily at 17:30 by <code>LHFund\RiskDashboard</code>.
+        To regenerate manually:
+      </p>
+      <pre><code>python scripts\generate_dashboard.py</code></pre>
+      <div class="card info">
+        <div class="card-title">📁 Status files</div>
+        <p>Raw status data lives in <code>memory\status\{script}.json</code>. These are plain JSON — you can inspect them directly if the dashboard is not loading.</p>
+      </div>
+    </section>
+
+    <!-- 7. Running Manually -->
+    <section id="s7">
+      <h2><span class="sec-num" style="background:#06b6d4">7</span>Running Manually</h2>
+      <p>To trigger any task immediately without waiting for the schedule:</p>
+
+      <h3>Via Task Scheduler (recommended)</h3>
+      <pre><code>schtasks /run /tn "LHFund\RiskMorning"
+schtasks /run /tn "LHFund\RiskEvening"
+schtasks /run /tn "LHFund\RiskGPOEmail"
+schtasks /run /tn "LHFund\RiskSQLQueries"
+schtasks /run /tn "LHFund\RiskDashboard"</code></pre>
+
+      <h3>Via command line (project root)</h3>
+      <pre><code>python scripts\morning\run_morning_part1.py
+python scripts\morning\run_morning_part2.py
+python scripts\evening\run_evening.py
+python scripts\evening\send_gpo_email.py
+python scripts\run_sql_queries.py
+python scripts\generate_dashboard.py</code></pre>
+
+      <h3>Via bat files</h3>
+      <pre><code>runners\run_morning.bat
+runners\run_evening.bat
+runners\run_gpo_email.bat
+runners\run_sql_queries.bat
+runners\run_dashboard.bat</code></pre>
+
+      <div class="card warn">
+        <div class="card-title">⚠️ Run from project root</div>
+        <p>Always run scripts from the project root directory (<code>D:\Work\risk-python\</code>), not from inside the <code>scripts\</code> subfolder. The bat files handle this automatically.</p>
+      </div>
+    </section>
+
+    <!-- 8. Changing Config -->
+    <section id="s8">
+      <h2><span class="sec-num" style="background:#ec4899">8</span>Changing Config</h2>
+      <p>All environment-specific values are centralised in <strong>one file</strong>: <code>scripts\config.py</code>. Do not hardcode paths or values in the scripts themselves.</p>
+
+      <table>
+        <thead><tr><th>What to change</th><th>Where</th><th>Variable</th></tr></thead>
+        <tbody>
+          <tr><td>ThaiBMA username / password</td><td><code>scripts\.env</code></td><td><code>user</code>, <code>pass</code></td></tr>
+          <tr><td>Network share base path</td><td><code>scripts\config.py</code></td><td><code>_RISK_SHARE</code></td></tr>
+          <tr><td>SQL Server hostname</td><td><code>scripts\config.py</code></td><td><code>DB_MAIN_SERVER</code></td></tr>
+          <tr><td>SQL output folder</td><td><code>scripts\config.py</code></td><td><code>SQL_OUTPUT_DIR</code></td></tr>
+          <tr><td>VaR lookback / confidence</td><td><code>scripts\config.py</code></td><td><code>VAR_LOOKBACK_DAYS</code>, <code>VAR_CONFIDENCE_PCT</code></td></tr>
+          <tr><td>Email recipients</td><td><code>scripts\config.py</code></td><td><code>EMAIL_RECIPIENTS</code></td></tr>
+          <tr><td>Excel macro names</td><td><code>scripts\config.py</code></td><td><code>MACRO_*</code></td></tr>
+          <tr><td>Schedule times</td><td><code>runners\setup_scheduler.bat</code></td><td><code>/st HH:MM</code> lines — then re-run as Admin</td></tr>
+        </tbody>
+      </table>
+
+      <div class="card success">
+        <div class="card-title">✅ After any config change</div>
+        <p>Commit the change to Git (<code>git commit -m "config: ..."</code>) so the change is tracked and other team members get it on next pull.</p>
+      </div>
+    </section>
+
+    <!-- 9. Contacts -->
+    <section id="s9">
+      <h2><span class="sec-num" style="background:#6366f1">9</span>Contacts</h2>
+      <table>
+        <thead><tr><th>Role</th><th>Responsibility</th><th>Contact</th></tr></thead>
+        <tbody>
+          <tr><td>Risk Team</td><td>Daily monitoring, failure triage, manual re-runs</td><td>risk@lhfund.co.th</td></tr>
+          <tr><td>Operations</td><td>Receives GPO update emails</td><td>operation@lhfund.co.th</td></tr>
+          <tr><td>IT / DBA</td><td>SQL Server access, network share permissions, workstation uptime</td><td>—</td></tr>
+          <tr><td>ThaiBMA</td><td>Website login issues, data availability</td><td>ibond.thaibma.or.th</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 10. Known Limitations -->
+    <section id="s10">
+      <h2><span class="sec-num" style="background:#14b8a6">10</span>Known Limitations</h2>
+      <table>
+        <thead><tr><th>#</th><th>Limitation</th><th>Impact</th><th>Workaround</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>Windows-only — requires Office + Anaconda</td>
+            <td>Cannot run on a server without a desktop session</td>
+            <td>Use a dedicated Windows workstation; ensure it is not locked during run hours</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>No automated tests</td>
+            <td>Code changes are not regression-tested</td>
+            <td>Manually smoke-test after any code change; CI only checks style (flake8)</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>ThaiBMA XPaths may break if website is redesigned</td>
+            <td>Downloads fail silently (logged as WARNING)</td>
+            <td>Inspect the ThaiBMA page manually and update XPaths in the relevant script</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>SQL date range is last 30 calendar days (hardcoded)</td>
+            <td>Long holiday gaps may miss some dates</td>
+            <td>Adjust <code>_date_range_30d()</code> in <code>scripts\run_sql_queries.py</code></td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td>Outlook must be open and signed in</td>
+            <td>Email alerts and GPO emails fail if Outlook is closed</td>
+            <td>Configure Outlook to start with Windows login</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  LHFund Risk Automation — Handover Document &nbsp;·&nbsp; v1.0 &nbsp;·&nbsp; 2026-04-21
+</footer>
+
+</body>
+</html>
