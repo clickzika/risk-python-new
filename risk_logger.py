@@ -1,7 +1,7 @@
 import logging
 import os
 import sys
-from datetime import datetime
+from datetime import date, datetime
 
 
 def send_failure_alert(script_name: str, error_msg: str) -> None:
@@ -20,6 +20,38 @@ def send_failure_alert(script_name: str, error_msg: str) -> None:
         mail.Send()
     except Exception as alert_err:
         logging.getLogger(script_name).error(f"Failed to send failure alert: {alert_err}")
+
+
+def is_holiday(check_date: date = None) -> bool:
+    """Return True if check_date (default: today) is a Thai public holiday.
+
+    Queries FIN_REG_LHF.dbo.holiday via SQL Server. Falls back to False
+    on any connection error so scripts still run if DB is unreachable.
+    """
+    if check_date is None:
+        check_date = date.today()
+    try:
+        import pyodbc
+        conn = pyodbc.connect(
+            "DRIVER={SQL Server};"
+            "SERVER=192.168.102.7\\DB2008;"
+            "DATABASE=FIN_REG_LHF;"
+            "Trusted_Connection=yes;",
+            timeout=5,
+        )
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT COUNT(*) FROM dbo.holiday WHERE holiday_date = ?",
+            check_date,
+        )
+        count = cursor.fetchone()[0]
+        conn.close()
+        return count > 0
+    except Exception as e:
+        logging.getLogger("risk_logger").warning(
+            f"Holiday check failed ({e}) — assuming not a holiday"
+        )
+        return False
 
 
 def get_logger(script_name: str) -> logging.Logger:

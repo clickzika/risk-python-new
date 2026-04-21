@@ -1,5 +1,11 @@
 @echo off
 cd /d "%~dp0.."
+
+:: Rotate logs older than 30 days
+if exist "logs\" (
+    forfiles /p "logs" /m *.log /d -30 /c "cmd /c del @path" 2>nul
+)
+
 echo [%date% %time%] Starting morning workflow...
 python scripts/morning/run_morning_part1.py
 if %ERRORLEVEL% NEQ 0 (

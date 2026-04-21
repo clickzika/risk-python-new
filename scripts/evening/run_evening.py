@@ -3,7 +3,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.edge.service import Service
 from webdriver_manager.microsoft import EdgeChromiumDriverManager
-from risk_logger import get_logger, send_failure_alert
+from risk_logger import get_logger, send_failure_alert, is_holiday
 import sys
 import time
 import os
@@ -194,6 +194,9 @@ def new_set():
 
 
 def main():
+    if is_holiday():
+        log.info("Today is a public holiday — skipping evening GPO run.")
+        return
     log.info("=== GPO evening workflow started ===")
     log.info(f"Loaded credentials from: {env_path}")
 
