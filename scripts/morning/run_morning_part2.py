@@ -6,7 +6,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.edge.options import Options
 from webdriver_manager.microsoft import EdgeChromiumDriverManager
 from dotenv import load_dotenv
-from risk_logger import get_logger, send_failure_alert, is_holiday, retry
+from risk_logger import get_logger, send_failure_alert, is_holiday, retry, write_status
 import win32com.client
 import sys
 import os
@@ -62,6 +62,7 @@ def run_excel_macro(file_path, macro_name):
 def main():
     if is_holiday():
         log.info("Today is a public holiday — skipping morning Part 2 run.")
+        write_status("run_morning_part2", "skipped", "Public holiday")
         return
     log.info("=== Morning ThaiBMA Part 2 started ===")
     log.info(f"Loaded credentials from: {env_path}")
@@ -198,6 +199,7 @@ def main():
 
     run_excel_macro(POWER_AUTOMATE, MACRO_UPDATE_DATA2)
     log.info("=== Morning ThaiBMA Part 2 completed ===")
+    write_status("run_morning_part2", "success", f"Copied {len(MORNING_PART2_FILE_MAPPINGS)} files")
 
 
 if __name__ == "__main__":
@@ -205,5 +207,6 @@ if __name__ == "__main__":
         main()
     except Exception as e:
         log.critical(f"Script failed: {e}", exc_info=True)
+        write_status("run_morning_part2", "failed", str(e))
         send_failure_alert("Run_morning_ThaiBMA_part2", str(e))
         sys.exit(1)

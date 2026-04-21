@@ -7,7 +7,7 @@ from selenium.webdriver.edge.options import Options
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from webdriver_manager.microsoft import EdgeChromiumDriverManager
 from dotenv import load_dotenv
-from risk_logger import get_logger, send_failure_alert, is_holiday, retry
+from risk_logger import get_logger, send_failure_alert, is_holiday, retry, write_status
 import win32com.client
 import sys
 import os
@@ -108,6 +108,7 @@ def run_excel_macro(file_path, macro_name):
 def main():
     if is_holiday():
         log.info("Today is a public holiday — skipping morning Part 1 run.")
+        write_status("run_morning_part1", "skipped", "Public holiday")
         return
     log.info("=== Morning ThaiBMA Part 1 started ===")
     log.info(f"Loaded credentials from: {env_path}")
@@ -220,6 +221,7 @@ def main():
     shutil.copy2(latest_file, LH_REPORT_DEST)
     log.info(f"Copied LHReport: {latest_file} → {LH_REPORT_DEST}")
     log.info("=== Morning ThaiBMA Part 1 completed ===")
+    write_status("run_morning_part1", "success", f"Last file: {os.path.basename(latest_file)}")
 
 
 if __name__ == "__main__":
@@ -227,5 +229,6 @@ if __name__ == "__main__":
         main()
     except Exception as e:
         log.critical(f"Script failed: {e}", exc_info=True)
+        write_status("run_morning_part1", "failed", str(e))
         send_failure_alert("Run_morning_ThaiBMA", str(e))
         sys.exit(1)

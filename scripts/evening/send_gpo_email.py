@@ -5,7 +5,7 @@ import pandas as pd
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 from config import GPO_FIXED_FILE, GPO_EQ_FILE, EMAIL_RECIPIENTS
-from risk_logger import get_logger, send_failure_alert, is_holiday
+from risk_logger import get_logger, send_failure_alert, is_holiday, write_status
 
 log = get_logger("send_gpo_email")
 
@@ -13,6 +13,7 @@ log = get_logger("send_gpo_email")
 def main():
     if is_holiday():
         log.info("Today is a public holiday — skipping GPO email.")
+        write_status("send_gpo_email", "skipped", "Public holiday")
         return
 
     log.info("=== GPO email started ===")
@@ -56,6 +57,7 @@ def main():
     newmail.Send()
     log.info("GPO email sent successfully")
     log.info("=== GPO email completed ===")
+    write_status("send_gpo_email", "success", f"Email sent to {EMAIL_RECIPIENTS}")
 
 
 if __name__ == "__main__":
@@ -63,5 +65,6 @@ if __name__ == "__main__":
         main()
     except Exception as e:
         log.critical(f"Script failed: {e}", exc_info=True)
+        write_status("send_gpo_email", "failed", str(e))
         send_failure_alert("send_gpo_email", str(e))
         sys.exit(1)
