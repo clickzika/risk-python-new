@@ -10,6 +10,7 @@ set PYTHON=C:\ProgramData\anaconda3\python.exe
 set PROJECT=%~dp0..
 set RUNNER_MORNING="%PROJECT%\runners\run_morning.bat"
 set RUNNER_EVENING="%PROJECT%\runners\run_evening.bat"
+set RUNNER_GPO_EMAIL="%PROJECT%\runners\run_gpo_email.bat"
 
 echo Registering LHFund Risk scheduled tasks...
 
@@ -41,7 +42,22 @@ if %ERRORLEVEL% NEQ 0 (
 )
 echo [OK] RiskEvening registered  — runs Mon-Fri at 17:00
 
+:: GPO standalone email — Mon-Fri at 17:15
+schtasks /create ^
+  /tn "LHFund\RiskGPOEmail" ^
+  /tr "%RUNNER_GPO_EMAIL%" ^
+  /sc WEEKLY /d MON,TUE,WED,THU,FRI ^
+  /st 17:15 ^
+  /rl HIGHEST ^
+  /f
+if %ERRORLEVEL% NEQ 0 (
+    echo [ERROR] Failed to register RiskGPOEmail task.
+    exit /b %ERRORLEVEL%
+)
+echo [OK] RiskGPOEmail registered  — runs Mon-Fri at 17:15
+
 echo.
 echo Done. Verify in Task Scheduler under LHFund\.
 echo To run manually: schtasks /run /tn "LHFund\RiskMorning"
 echo                  schtasks /run /tn "LHFund\RiskEvening"
+echo                  schtasks /run /tn "LHFund\RiskGPOEmail"
