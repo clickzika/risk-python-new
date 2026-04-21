@@ -56,6 +56,20 @@ if %ERRORLEVEL% NEQ 0 (
 )
 echo [OK] RiskGPOEmail registered  — runs Mon-Fri at 17:15
 
+:: SQL queries — Mon-Fri at 18:00 (after market data is settled)
+schtasks /create ^
+  /tn "LHFund\RiskSQLQueries" ^
+  /tr "%PROJECT%\runners\run_sql_queries.bat" ^
+  /sc WEEKLY /d MON,TUE,WED,THU,FRI ^
+  /st 18:00 ^
+  /rl HIGHEST ^
+  /f
+if %ERRORLEVEL% NEQ 0 (
+    echo [ERROR] Failed to register RiskSQLQueries task.
+    exit /b %ERRORLEVEL%
+)
+echo [OK] RiskSQLQueries registered — runs Mon-Fri at 18:00
+
 :: Dashboard — Mon-Fri at 17:30 (after evening + GPO email)
 schtasks /create ^
   /tn "LHFund\RiskDashboard" ^
@@ -76,3 +90,4 @@ echo To run manually: schtasks /run /tn "LHFund\RiskMorning"
 echo                  schtasks /run /tn "LHFund\RiskEvening"
 echo                  schtasks /run /tn "LHFund\RiskGPOEmail"
 echo                  schtasks /run /tn "LHFund\RiskDashboard"
+echo                  schtasks /run /tn "LHFund\RiskSQLQueries"
