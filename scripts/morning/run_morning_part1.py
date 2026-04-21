@@ -7,7 +7,7 @@ from selenium.webdriver.edge.options import Options
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from webdriver_manager.microsoft import EdgeChromiumDriverManager
 from dotenv import load_dotenv
-from risk_logger import get_logger, send_failure_alert
+from risk_logger import get_logger, send_failure_alert, is_holiday
 import win32com.client
 import sys
 import os
@@ -121,6 +121,9 @@ def run_excel_macro(file_path, macro_name):
 
 
 def main():
+    if is_holiday():
+        log.info("Today is a public holiday — skipping morning Part 1 run.")
+        return
     log.info("=== Morning ThaiBMA Part 1 started ===")
     log.info(f"Loaded credentials from: {env_path}")
 
