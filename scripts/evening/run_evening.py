@@ -2,30 +2,25 @@ from dotenv import load_dotenv
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.edge.service import Service
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.microsoft import EdgeChromiumDriverManager
-from selenium.common.exceptions import NoSuchElementException
 from risk_logger import get_logger, send_failure_alert
 import sys
 import time
 import os
 import glob
 import shutil
-import zipfile
 import pandas as pd
 import win32com.client
 import subprocess
-from pathlib import Path
 from datetime import datetime, timedelta
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 from config import (
     EVENING_DL_DIR, EVENING_DATA_DIR,
-    POWER_AUTOMATE_PM, BENCHMARK_XLSM, BENCHMARK_XLSM_NAME,
+    POWER_AUTOMATE_PM,
     THAIBMA_LOGIN_ST, THAIBMA_LOGIN_BOND, THAIBMA_LOGIN_CORP,
     GPO_FIXED_FILE, GPO_EQ_FILE, SET_TRI_GLOB,
-    MACRO_FINISH_BMA, MACRO_NEW_FINISH_SET, MACRO_CREATE_PM, MACRO_EVENING_BENCH,
+    MACRO_NEW_FINISH_SET, MACRO_CREATE_PM, MACRO_EVENING_BENCH,
     EVENING_FILE_MAPPINGS, EMAIL_RECIPIENTS,
 )
 
@@ -79,7 +74,7 @@ def Create_Afternoon(file_path, macro_name):
 def open_file_and_run_macro(file_path_Bench: str, name2: str):
     excel_app = win32com.client.Dispatch('Excel.Application')
     excel_app.Visible = True
-    wb = excel_app.Workbooks.Open(os.path.abspath(file_path_Bench))
+    excel_app.Workbooks.Open(os.path.abspath(file_path_Bench))
     excel_app.Application.Run(f'{name2}!Module1.{macro_name_Bench}')
     while not excel_app.Application.Ready:
         time.sleep(1)

@@ -1,6 +1,5 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.edge.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -15,8 +14,6 @@ import os
 import shutil
 import glob
 import time
-import datetime
-from datetime import date, timedelta
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 from config import (
@@ -44,7 +41,7 @@ def Morningstar_Benchmark():
             list_of_files = glob.glob(f'{MORNINGSTAR_SRC}\\Morningstar Benchmark*.xls')
             latest_file = max(list_of_files, key=os.path.getctime)
             break
-        except:
+        except Exception:
             time.sleep(0.5)
     shutil.copy(latest_file, f'{DATA_FILE_DIR}\\Morningstar Benchmark.xls')
 
@@ -105,7 +102,7 @@ def D_YieldTTM():
             list_of_files = glob.glob(f'{MORNING_DL_DIR}\\YieldTTM_202*.xlsx')
             latest_file = max(list_of_files, key=os.path.getctime)
             break
-        except:
+        except Exception:
             time.sleep(0.5)
     shutil.copy(latest_file, f'{DATA_FILE_DIR}\\D_YieldTTM.xlsx')
 
@@ -121,13 +118,6 @@ def run_excel_macro(file_path, macro_name):
         print("Macro executed successfully.")
     except Exception as e:
         print("An error occurred:", e)
-
-
-def get_previous_business_day(reference_date):
-    previous_day = reference_date - timedelta(days=1)
-    while previous_day.weekday() > 4:
-        previous_day -= timedelta(days=1)
-    return previous_day
 
 
 def main():
@@ -159,7 +149,7 @@ def main():
                 driver.find_element(By.XPATH, "/html/body/div/div/div/main/form/button").click()
                 time.sleep(7.5)
                 break
-            except:
+            except Exception:
                 time.sleep(0.5)
         log.info("ThaiBMA login successful")
 
@@ -171,7 +161,7 @@ def main():
             try:
                 driver.find_element(By.XPATH, "//*[@id='root']/div[3]/div[1]/div[3]/div/div[2]/div/div/span[3]/div/button").click()
                 break
-            except:
+            except Exception:
                 time.sleep(6.5)
 
         time.sleep(10)
@@ -180,7 +170,7 @@ def main():
             try:
                 driver.find_element(By.XPATH, "//*[@id='root']/div[3]/div[1]/div[3]/div/div[2]/div/div/span[3]/div/button").click()
                 break
-            except:
+            except Exception:
                 time.sleep(3.5)
 
         print('ไฟล์Paperสำเร็จ')
@@ -196,7 +186,7 @@ def main():
             accept_button.click()
             driver.find_element(By.XPATH, "//*[@id='root']/div[3]/div[1]/div[3]/div/div[2]/div/div/span[3]/div/button").click()
             print('กดปุ่ม Accept สำเร็จ')
-        except:
+        except Exception:
             print('ไม่มีปุ่ม Accept หรือกดไม่สำเร็จ')
 
         LoadFile(driver, "//table//tr[1]/td[14]//button//i", "แรก")
@@ -236,8 +226,6 @@ def main():
     time.sleep(2)
     run_excel_macro(POWER_AUTOMATE, MACRO_UPDATE_DATA)
 
-    yesterday_business_day = get_previous_business_day(date.today())
-    folder = yesterday_business_day.strftime("%Y-%m-%d")
     time.sleep(2)
 
     list_of_files = [f for f in glob.glob(LH_REPORT_GLOB) if not os.path.basename(f).startswith('~$')]

@@ -1,13 +1,11 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.edge.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.edge.options import Options
 from webdriver_manager.microsoft import EdgeChromiumDriverManager
 from dotenv import load_dotenv
-from selenium.webdriver.common.action_chains import ActionChains
 from risk_logger import get_logger, send_failure_alert
 import win32com.client
 import sys
@@ -15,8 +13,6 @@ import os
 import shutil
 import glob
 import time
-import datetime
-from datetime import date, timedelta
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 from config import (
@@ -88,7 +84,6 @@ def main():
     })
 
     driver = webdriver.Edge(service=Service(EdgeChromiumDriverManager().install()), options=edge_options)
-    actions = ActionChains(driver)
     try:
         driver.get(THAIBMA_LOGIN)
         time.sleep(4)
@@ -100,7 +95,7 @@ def main():
                 driver.find_element(By.XPATH, "/html/body/div/div/div/main/form/button").click()
                 time.sleep(7.5)
                 break
-            except:
+            except Exception:
                 time.sleep(1.5)
         log.info("ThaiBMA login successful")
 
@@ -119,7 +114,7 @@ def main():
                 driver.execute_script("arguments[0].click();", btn)
                 print("กดปุ่ม Download สำเร็จ")
                 break
-            except Exception as e:
+            except Exception:
                 print("ยังไม่เจอปุ่ม ลองใหม่...", i)
 
         time.sleep(35)
