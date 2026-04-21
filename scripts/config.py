@@ -55,6 +55,18 @@ MACRO_EVENING_BENCH  = 'evening'
 # === EMAIL ===
 EMAIL_RECIPIENTS = 'risk@lhfund.co.th ; operation@lhfund.co.th'
 
+# === SQL SERVER CONNECTIONS ===
+# Primary server hosts: LHF_SYSTEM, LHF_PERFORMANCE, INV_LHF, FIN_REG_LHF
+DB_MAIN_SERVER  = r'YOUR_MAIN_SQL_SERVER'  # e.g. r'192.168.1.10\SQLEXPRESS'
+DB_LEGACY_SERVER = r'192.168.102.7\DB2008'  # Legacy — holiday calendar
+
+# === SQL QUERY OUTPUT ===
+SQL_OUTPUT_DIR = _RISK_SHARE + r'\Amornsiri\SQL_Output'
+
+# === VAR DEFAULT PARAMETERS ===
+VAR_LOOKBACK_DAYS  = 250   # trading days for historical VaR
+VAR_CONFIDENCE_PCT = 95    # confidence level (%)
+
 # === FILE MAPPINGS — MORNING PART 1 ===
 MORNING_PART1_FILE_MAPPINGS = [
     ('MTMGov_G1_Index_',        'MTMGov_G1'),

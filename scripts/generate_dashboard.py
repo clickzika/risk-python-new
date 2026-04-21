@@ -8,6 +8,7 @@ SCRIPT_LABELS = {
     "run_morning_part2": "Morning Part 2 — ZRR / Corp Bond / Composite",
     "run_evening":       "Evening — VBA macros + GPO workflow",
     "send_gpo_email":    "GPO Email — standalone Bloomberg report",
+    "run_sql_queries":   "SQL Queries — NAV / Holdings / VaR / Bloomberg",
 }
 
 STATUS_COLOR = {
