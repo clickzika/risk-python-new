@@ -1,8 +1,9 @@
 # Credentials — NEVER commit these
 *.env
-.env
-PP.env
-two.env
+scripts/.env
+
+# Logs (auto-generated at runtime)
+logs/
 
 # Python
 __pycache__/

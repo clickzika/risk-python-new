@@ -1,7 +1,7 @@
 {
   "project": "risk-python",
   "workflow": "devstarter-existing",
-  "status": "WAITING_APPROVAL",
+  "status": "IN_PROGRESS",
   "gate": "1",
   "last_completed": "Phase 3 — CLAUDE.md, docs/brd.html, docs/schema.html, docs/scripts.html, devstarter-config.yml, .gitignore generated",
   "next_action": "After Gate 1 approval: Phase 3.5 — GitHub setup, then Phase 4 — Work Plan",
