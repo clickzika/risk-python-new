@@ -1,4 +1,0 @@
-SELECT  DATEADD(day, -1, CAST(GETDATE() AS DATE)) as Date , *
-
-  FROM [INV_LHF].[INVEST].[HOLDING]
- -- where PORTFOLIOCODE = 'LHVN'
